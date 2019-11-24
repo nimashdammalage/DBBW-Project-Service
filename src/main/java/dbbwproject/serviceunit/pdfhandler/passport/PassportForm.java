@@ -1,5 +1,6 @@
-package dbbwproject.serviceunit.pdfhandler;
+package dbbwproject.serviceunit.pdfhandler.passport;
 
+import dbbwproject.serviceunit.pdfhandler.Validate;
 import lombok.Data;
 
 @Data

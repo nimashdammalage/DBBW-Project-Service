@@ -1,4 +1,4 @@
-package dbbwproject.serviceunit.pdfhandler;
+package dbbwproject.serviceunit.pdfhandler.passport;
 
 public enum TypeOfTravelDoc {
     ALL_COUNTRIES("typeOfTravelDoc.allCountries"),

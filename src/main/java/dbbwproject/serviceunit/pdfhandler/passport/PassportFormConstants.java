@@ -1,4 +1,4 @@
-package dbbwproject.serviceunit.pdfhandler;
+package dbbwproject.serviceunit.pdfhandler.passport;
 
 public class PassportFormConstants {
     public static final int PRESENT_TRAVEL_DOC_NO_LENGTH = 10;

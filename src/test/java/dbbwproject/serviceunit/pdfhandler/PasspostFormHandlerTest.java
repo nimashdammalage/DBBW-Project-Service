@@ -1,5 +1,6 @@
 package dbbwproject.serviceunit.pdfhandler;
 
+import dbbwproject.serviceunit.pdfhandler.passport.*;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
