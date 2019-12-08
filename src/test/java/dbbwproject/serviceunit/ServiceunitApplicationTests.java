@@ -2,7 +2,7 @@ package dbbwproject.serviceunit;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.FirebaseDatabase;
-import dbbwproject.serviceunit.controller.ISeasonController;
+import dbbwproject.serviceunit.controller.SeasonController;
 import org.junit.jupiter.api.Test;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ServiceunitApplicationTests {
 
     @Autowired
-    ISeasonController seasonController;
+    SeasonController seasonController;
 
     @Autowired
     ModelMapper modelMapper;

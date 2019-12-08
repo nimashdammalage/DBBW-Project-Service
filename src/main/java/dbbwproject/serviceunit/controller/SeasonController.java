@@ -23,37 +23,31 @@ import java.util.Map;
 //@CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @Api(value = "Season Management", description = "handling season resource operations")
-public class SeasonController implements ISeasonController {
-
-    private final RestTemplate restTemplate;
+@RequestMapping("/resource-management")
+public class SeasonController extends ResourseContoller {
+    private static final String SEASONS_PATH = "/seasons";
 
     @Autowired
     public SeasonController(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+        super(restTemplate);
     }
 
-    @Value("${firebase.realtime-database-url}")
-    private String fireBaseDBUrl;
-
-    @Value("${firebase.service-account-filename}")
-    private String serviceAccountKeyPath;
-
-    @Override
+    @GetMapping("/season-status")
     @ApiOperation(value = "Retrieve a list of all season status", response = ResponseWrapperList.class)
     public ResponseWrapperList<SeasonStatus> getAllSeasonStatus() {
         return new ResponseWrapperList<>(ErrStatus.SUCCESS, Arrays.asList(SeasonStatus.values()));
     }
 
-    @Override
+    @GetMapping("/seasons")
     @ApiOperation(value = "Retrieve a list of all seasons", response = ResponseWrapperList.class)
     public ResponseWrapperList<SeasonDTO> getAllSeasons() {
         String accessToken;
         try {
             accessToken = AccessTokenGenrator.getAccessToken(serviceAccountKeyPath);
         } catch (IOException e) {
-            return new ResponseWrapperList<>(ErrStatus.ERROR, null, "unable to genarate firebase access token" + e.getMessage());
+            return new ResponseWrapperList<>(ErrStatus.ERROR, null, "unable to generate firebase access token" + e.getMessage());
         }
-        String url = fireBaseDBUrl + "/seasons.json?access_token=" + accessToken;
+        String url = fireBaseDBUrl + SEASONS_PATH + ".json?access_token=" + accessToken;
         Map<String, SeasonDTO> result = restTemplate.getForObject(url, Map.class);
         if (result == null) {
             return new ResponseWrapperList<>(ErrStatus.ERROR, null, "error in getAllSeasons");
@@ -61,16 +55,16 @@ public class SeasonController implements ISeasonController {
         return new ResponseWrapperList<>(ErrStatus.SUCCESS, new ArrayList<>(result.values()), null);
     }
 
-    @Override
+    @GetMapping("/seasons/{code}")
     @ApiOperation(value = "Retrieve season by code", response = ResponseWrapper.class)
     public ResponseWrapper<SeasonDTO> getSeasonByCode(@PathVariable String code) {
         String accessToken;
         try {
             accessToken = AccessTokenGenrator.getAccessToken(serviceAccountKeyPath);
         } catch (IOException e) {
-            return new ResponseWrapper<>(ErrStatus.ERROR, null, "unable to genarate firebase access token" + e.getMessage());
+            return new ResponseWrapper<>(ErrStatus.ERROR, null, "unable to generate firebase access token" + e.getMessage());
         }
-        String url = fireBaseDBUrl + "/seasons/" + code + ".json?access_token=" + accessToken;
+        String url = fireBaseDBUrl + SEASONS_PATH + "/" + code + ".json?access_token=" + accessToken;
         ResponseEntity<SeasonDTO> result = restTemplate.getForEntity(url, SeasonDTO.class);
         if (!result.getStatusCode().equals(HttpStatus.OK)) {
             return new ResponseWrapper<>(ErrStatus.ERROR, null, "error in call firebase get method" + result.getBody().toString());
@@ -78,8 +72,8 @@ public class SeasonController implements ISeasonController {
         return new ResponseWrapper<>(ErrStatus.SUCCESS, result.getBody());
     }
 
-    @Override
     @ApiOperation(value = "Modify existing season by code", response = ResponseWrapper.class)
+    @PutMapping("/seasons/{code}")
     public ResponseWrapper<SeasonDTO> modifySeasonByCode(@PathVariable String code, @RequestBody SeasonDTO resource) {
         if (!code.equals(resource.getCode())) {
             return new ResponseWrapper<>(ErrStatus.ERROR, null, "season's code: " + resource.getCode() + "and code in url: " + code + " does not match");
@@ -93,9 +87,9 @@ public class SeasonController implements ISeasonController {
         try {
             accessToken = AccessTokenGenrator.getAccessToken(serviceAccountKeyPath);
         } catch (IOException e) {
-            return new ResponseWrapper<>(ErrStatus.ERROR, null, "unable to genarate firebase access token" + e.getMessage());
+            return new ResponseWrapper<>(ErrStatus.ERROR, null, "unable to generate firebase access token" + e.getMessage());
         }
-        String url = fireBaseDBUrl + "/seasons/" + resource.getCode() + ".json?access_token=" + accessToken;
+        String url = fireBaseDBUrl + SEASONS_PATH + "/" + resource.getCode() + ".json?access_token=" + accessToken;
         restTemplate.put(url, resource, SeasonDTO.class);
         SeasonDTO updatedSeason = getSeasonByCode(code).getResponseObject();
         if (updatedSeason == null) {
@@ -104,8 +98,8 @@ public class SeasonController implements ISeasonController {
         return new ResponseWrapper<>(ErrStatus.SUCCESS, updatedSeason);
     }
 
-    @Override
     @ApiOperation(value = "Create a season ", response = ResponseWrapper.class)
+    @PostMapping("/seasons")
     public ResponseWrapper<SeasonDTO> createNewSeason(@RequestBody SeasonDTO resource) {
         if (getSeasonByCode(resource.getCode()).getResponseObject() != null) {
             //Season already exists
@@ -119,15 +113,15 @@ public class SeasonController implements ISeasonController {
         try {
             accessToken = AccessTokenGenrator.getAccessToken(serviceAccountKeyPath);
         } catch (IOException e) {
-            return new ResponseWrapper<>(ErrStatus.ERROR, null, "unable to genarate firebase access token" + e.getMessage());
+            return new ResponseWrapper<>(ErrStatus.ERROR, null, "unable to generate firebase access token" + e.getMessage());
         }
-        String url = fireBaseDBUrl + "/seasons/" + resource.getCode() + ".json?access_token=" + accessToken;
+        String url = fireBaseDBUrl + SEASONS_PATH + "/" + resource.getCode() + ".json?access_token=" + accessToken;
         restTemplate.put(url, resource, SeasonDTO.class);
         return new ResponseWrapper<>(ErrStatus.SUCCESS, null);
     }
 
-    @Override
     @ApiOperation(value = "Delete a season ", response = ResponseWrapper.class)
+    @DeleteMapping("/seasons/{code}")
     public ResponseWrapper<SeasonDTO> deleteSeasonByCode(@PathVariable String code) {
         if (getSeasonByCode(code).getResponseObject() == null) {
             //Season not exists
@@ -137,9 +131,9 @@ public class SeasonController implements ISeasonController {
         try {
             accessToken = AccessTokenGenrator.getAccessToken(serviceAccountKeyPath);
         } catch (IOException e) {
-            return new ResponseWrapper<>(ErrStatus.ERROR, null, "unable to genarate firebase access token" + e.getMessage());
+            return new ResponseWrapper<>(ErrStatus.ERROR, null, "unable to generate firebase access token" + e.getMessage());
         }
-        String url = fireBaseDBUrl + "/seasons/" + code + ".json?access_token=" + accessToken;
+        String url = fireBaseDBUrl + SEASONS_PATH + "/" + code + ".json?access_token=" + accessToken;
         restTemplate.delete(url);
         return new ResponseWrapper<>(ErrStatus.SUCCESS, null);
     }

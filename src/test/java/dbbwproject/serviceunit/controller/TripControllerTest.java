@@ -1,9 +1,9 @@
 package dbbwproject.serviceunit.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import dbbwproject.serviceunit.config.FireBaseAppConfig;
-import dbbwproject.serviceunit.dto.SeasonDTO;
-import dbbwproject.serviceunit.dto.SeasonStatus;
+import dbbwproject.serviceunit.config.FirebaseAuthAndDBConfig;
+import dbbwproject.serviceunit.dto.TripDTO;
+import dbbwproject.serviceunit.dto.TripStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,60 +13,23 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
+
+import static dbbwproject.serviceunit.controller.SeasonControllerTest.asJsonString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@Import(FireBaseAppConfig.class)
+@Import({FirebaseAuthAndDBConfig.class, FireBaseAppConfig.class})
 @RunWith(SpringRunner.class)
-@WebMvcTest(SeasonController.class)
-class ISeasonControllerTest {
+@WebMvcTest(TripController.class)
+class TripControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
     @Test
-    public void testSeasonDelete() throws Exception {
-        mockMvc.perform(
-                delete("/season-management/seasons/{code}","6rdCode")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
-        )
-                .andDo(print())
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    public void testSeasonput() throws Exception {
-        SeasonDTO ss = new SeasonDTO("6rdCode", SeasonStatus.CURRENT);
-
-        mockMvc.perform(
-                put("/season-management/seasons/{code}","6rdCode")
-                        .content(asJsonString(ss))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
-        )
-                .andDo(print())
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    public void testSeasonPost() throws Exception {
-        SeasonDTO ss = new SeasonDTO("6rdCode", SeasonStatus.COMPLETED);
-
-        mockMvc.perform(
-                post("/season-management/seasons")
-                        .content(asJsonString(ss))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
-        )
-                .andDo(print())
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    public void testSeasonGET() throws Exception {
+    public void testTripGETbySeason() throws Exception {
         System.out.println(mockMvc.perform(
-                get("/season-management/seasons")
+                get("/resource-management/seasons/{seasonCode}/trips", "6rdCode")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
         )
@@ -75,23 +38,50 @@ class ISeasonControllerTest {
     }
 
     @Test
-    public void testSeasonGETByCode() throws Exception {
-        System.out.println(mockMvc.perform(
-                get("/season-management/seasons/{code}","6rdCode")
+    public void testTripPOST() throws Exception {
+        TripDTO trip1 = new TripDTO("trip1", "6rdCode", 500, "2018-01-13", "2019-02-19", "2020-10-15", TripStatus.COMPLETED);
+        mockMvc.perform(
+                post("/resource-management/seasons/{seasonCode}/trips", "6rdCode")
+                        .content(asJsonString(trip1))
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
-
+        )
+                .andDo(print())
+                .andExpect(status().isOk());
+    }
+    @Test
+    public void testTripGETbySeasonAndTrip() throws Exception {
+        System.out.println(mockMvc.perform(
+                get("/resource-management/seasons/{seasonCode}/trips/{tripCode}", "3rdCode","trip1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
         )
                 .andDo(print())
                 .andExpect(status().isOk()));
     }
 
-    public static String asJsonString(final Object obj) {
-        try {
-            return new ObjectMapper().writeValueAsString(obj);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    @Test
+    public void testTripput() throws Exception {
+        TripDTO trip1 = new TripDTO("trip1", "6rdCode", 1000, "2018-01-14", "2019-02-14", "2020-10-14", TripStatus.WORKING);
+        mockMvc.perform(
+                put("/resource-management/seasons/{seasonCode}/trips/{tripCode}", "6rdCode","trip1")
+                        .content(asJsonString(trip1))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+        )
+                .andDo(print())
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void testTripDelete() throws Exception {
+        mockMvc.perform(
+                delete("/resource-management/seasons/{seasonCode}/trips/{tripCode}", "6rdCode","trip1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+        )
+                .andDo(print())
+                .andExpect(status().isOk());
     }
 
 }
