@@ -10,37 +10,70 @@ class PasspostFormHandlerTest {
     @Test
     void savePassportForm() throws IOException {
         PassportForm form = new PassportForm();
-        form.setTypeOfService(TypeOfService.NORMAL);
-        form.setTypeOfTravelDoc(TypeOfTravelDoc.ALL_COUNTRIES);
-        form.setPresentTravelDocNo("0");
-        form.setNmrpNo("1");
-        form.setNicNo("2");
-        form.setSurName("3");
-        form.setOtherNames("3");
-        form.setPermenentAddress("3");
-        form.setDistrict("3");
+        form.setTypeOfService(TypeOfService.ONE_DAY);
+        form.setTypeOfTravelDoc(TypeOfTravelDoc.IDENTITY_CERTIFICATE);
+        form.setPresentTravelDocNo("123456789v");
+        form.setNmrpNo("123456789v");
+        form.setNicNo("0123456789vf");
+        form.setSurName("SU defghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQR");
+        form.setOtherNames("on defghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQR");
+        form.setPermenentAddress("PA defghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQR");
+        form.setDistrict("DI ABCDEFGHI");
         DateOfBirth dateOfBirth = new DateOfBirth();
-        dateOfBirth.setDate("1");
-        dateOfBirth.setMonth("1");
-        dateOfBirth.setYear("1");
+        dateOfBirth.setDate("23");
+        dateOfBirth.setMonth("08");
+        dateOfBirth.setYear("1993");
         form.setDateOfBirth(dateOfBirth);
         BirthCertificate bs = new BirthCertificate();
-        bs.setNo("1");
-        bs.setDistrict("1");
+        bs.setNo("1234");
+        bs.setDistrict("MY__DISTRICT");
         form.setBirthCertificate(bs);
-        form.setPlaceOfBirth("1");
+        form.setPlaceOfBirth("PO_CDEFGHIJKLMNOPQRSTU");
         form.setSex(Sex.MALE);
-        form.setJob("0");
+        form.setJob("JOB_MUJOBISENGINEERING");
         form.setDualCitizenship(DualCitizenship.YES);
-        form.setDualCitizenshipNo("8");
-        form.setMobileNo("7");
-        form.setEmail("4");
-        form.setForeignNationality("1");
-        form.setForeignPassportNo("3");
-        form.setFatherNicNo("9");
-        form.setMotherNicNo("1");
-
+        form.setDualCitizenshipNo("0123456789VK");
+        form.setMobileNo("0771650539");
+        form.setEmail("nimashdilanka.13@gmail");
+        form.setForeignNationality("FOR_NATIONALITY");
+        form.setForeignPassportNo("FOR_PASSPORT_NO");
+        form.setFatherNicNo("932361256vkr");
+        form.setMotherNicNo("123461256vko");
         PasspostFormHandler.savePassportForm(form, "newPassport.pdf");
+    }
 
+    @Test
+    void savePassportFormTwo() throws IOException {
+        PassportForm form = new PassportForm();
+        form.setTypeOfService(TypeOfService.ONE_DAY);
+        form.setTypeOfTravelDoc(TypeOfTravelDoc.ALL_COUNTRIES);
+        form.setPresentTravelDocNo("");
+        form.setNmrpNo("");
+        form.setNicNo("932361256v");
+        form.setSurName("DILANKA");
+        form.setOtherNames("");
+        form.setPermenentAddress("D7,FACTORY SIDE,HINGURANA,AMPARA");
+        form.setDistrict("DIGAMADULLA");
+        DateOfBirth dateOfBirth = new DateOfBirth();
+        dateOfBirth.setDate("23");
+        dateOfBirth.setMonth("08");
+        dateOfBirth.setYear("1993");
+        form.setDateOfBirth(dateOfBirth);
+        BirthCertificate bs = new BirthCertificate();
+        bs.setNo("8069");
+        bs.setDistrict("GALLE");
+        form.setBirthCertificate(bs);
+        form.setPlaceOfBirth("MAHAMODARA");
+        form.setSex(Sex.MALE);
+        form.setJob("SOFTWARE ENGINEER");
+        form.setDualCitizenship(DualCitizenship.NO);
+        form.setDualCitizenshipNo("");
+        form.setMobileNo("0771650539");
+        form.setEmail("nimashdilan@gmail.com");
+        form.setForeignNationality("");
+        form.setForeignPassportNo("");
+        form.setFatherNicNo("");
+        form.setMotherNicNo("");
+        PasspostFormHandler.savePassportForm(form, "newPassportTwo.pdf");
     }
 }

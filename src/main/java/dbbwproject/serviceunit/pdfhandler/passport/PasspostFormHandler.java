@@ -10,11 +10,12 @@ import org.springframework.util.ResourceUtils;
 import java.io.*;
 
 public class PasspostFormHandler {
+    private static int DEFAULT_FONT_SIZE = 8;
 
     public static void savePassportForm(PassportForm passportForm, String fileLocaion) throws IOException {
         passportForm.validate();
-        File file = ResourceUtils.getFile("classpath:pasportApplication_halfEdit-Copy.pdf");
-        try(PdfDocument pdf = new PdfDocument(new PdfReader(new FileInputStream(file)),
+        File file = ResourceUtils.getFile("classpath:passportApplicationTemplate.pdf");
+        try (PdfDocument pdf = new PdfDocument(new PdfReader(new FileInputStream(file)),
                 new PdfWriter(new FileOutputStream(fileLocaion)))) {
             PdfAcroForm form = PdfAcroForm.getAcroForm(pdf, true);
 
@@ -51,10 +52,12 @@ public class PasspostFormHandler {
         for (int i = 0; i < passportFormValue.length(); i++) {
             String fieldName = parentField + "." + i;
             form.getField(fieldName).setValue(Character.toString(passportFormValue.charAt(i)));
+            form.getField(fieldName).setFontSize(DEFAULT_FONT_SIZE);
         }
     }
 
     private static void setString(String parentField, String passportFormValue, PdfAcroForm form) {
-            form.getField(parentField).setValue(passportFormValue);
+        form.getField(parentField).setValue(passportFormValue);
+        form.getField(parentField).setFontSize(DEFAULT_FONT_SIZE);
     }
 }

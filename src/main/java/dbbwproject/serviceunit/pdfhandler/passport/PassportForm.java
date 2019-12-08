@@ -54,10 +54,10 @@ public class PassportForm implements Validate {
 
     private static void validateField(String field, int length, String fieldName) {
         if (field == null) {
-            throw new IllegalStateException(fieldName + "can not be null in PassportForm object.");
+            throw new IllegalStateException(fieldName + " can not be null in PassportForm object.");
         }
         if (field.length() > length) {
-            throw new IllegalStateException(fieldName + "size must be less than or equal to " + length + " .");
+            throw new IllegalStateException(fieldName + " size must be less than or equal to " + length + " .");
         }
     }
 

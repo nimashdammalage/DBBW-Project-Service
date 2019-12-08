@@ -1,7 +1,10 @@
 package dbbwproject.serviceunit;
 
-import dbbwproject.serviceunit.controller.CustomerController;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.FirebaseDatabase;
+import dbbwproject.serviceunit.controller.ISeasonController;
 import org.junit.jupiter.api.Test;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -9,12 +12,22 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 class ServiceunitApplicationTests {
+
     @Autowired
-    private CustomerController customerController;
+    ISeasonController seasonController;
+
+    @Autowired
+    ModelMapper modelMapper;
+
+    @Autowired
+    FirebaseAuth firebaseAuth;
+
+    @Autowired
+    FirebaseDatabase firebaseDatabase;
 
     @Test
-    public void contexLoads() throws Exception {
-        assertThat(customerController).isNotNull();
+    void contexLoads() {
+        assertThat(seasonController).isNotNull();
     }
 
 }
