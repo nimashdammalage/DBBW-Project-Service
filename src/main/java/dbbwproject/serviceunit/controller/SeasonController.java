@@ -1,5 +1,6 @@
 package dbbwproject.serviceunit.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dbbwproject.serviceunit.dto.SeasonDTO;
 import dbbwproject.serviceunit.dto.SeasonStatus;
 import dbbwproject.serviceunit.dto.response.ErrStatus;
@@ -8,6 +9,7 @@ import dbbwproject.serviceunit.dto.response.ResponseWrapperList;
 import dbbwproject.serviceunit.firebasehandler.AccessTokenGenrator;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -23,22 +25,22 @@ import java.util.Map;
 //@CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @Api(value = "Season Management", description = "handling season resource operations")
-@RequestMapping("/resource-management")
+@RequestMapping("/resource-management/")
 public class SeasonController extends ResourseContoller {
     private static final String SEASONS_PATH = "/seasons";
 
     @Autowired
-    public SeasonController(RestTemplate restTemplate) {
-        super(restTemplate);
+    public SeasonController(RestTemplate restTemplate, ModelMapper modelMapper, ObjectMapper objectMapper) {
+        super(restTemplate, modelMapper, objectMapper);
     }
 
-    @GetMapping("/season-status")
+    @GetMapping("season-status")
     @ApiOperation(value = "Retrieve a list of all season status", response = ResponseWrapperList.class)
     public ResponseWrapperList<SeasonStatus> getAllSeasonStatus() {
         return new ResponseWrapperList<>(ErrStatus.SUCCESS, Arrays.asList(SeasonStatus.values()));
     }
 
-    @GetMapping("/seasons")
+    @GetMapping("seasons")
     @ApiOperation(value = "Retrieve a list of all seasons", response = ResponseWrapperList.class)
     public ResponseWrapperList<SeasonDTO> getAllSeasons() {
         String accessToken;
@@ -55,7 +57,7 @@ public class SeasonController extends ResourseContoller {
         return new ResponseWrapperList<>(ErrStatus.SUCCESS, new ArrayList<>(result.values()), null);
     }
 
-    @GetMapping("/seasons/{code}")
+    @GetMapping("seasons/{code}")
     @ApiOperation(value = "Retrieve season by code", response = ResponseWrapper.class)
     public ResponseWrapper<SeasonDTO> getSeasonByCode(@PathVariable String code) {
         String accessToken;
@@ -73,7 +75,7 @@ public class SeasonController extends ResourseContoller {
     }
 
     @ApiOperation(value = "Modify existing season by code", response = ResponseWrapper.class)
-    @PutMapping("/seasons/{code}")
+    @PutMapping("seasons/{code}")
     public ResponseWrapper<SeasonDTO> modifySeasonByCode(@PathVariable String code, @RequestBody SeasonDTO resource) {
         if (!code.equals(resource.getCode())) {
             return new ResponseWrapper<>(ErrStatus.ERROR, null, "season's code: " + resource.getCode() + "and code in url: " + code + " does not match");
@@ -99,7 +101,7 @@ public class SeasonController extends ResourseContoller {
     }
 
     @ApiOperation(value = "Create a season ", response = ResponseWrapper.class)
-    @PostMapping("/seasons")
+    @PostMapping("seasons")
     public ResponseWrapper<SeasonDTO> createNewSeason(@RequestBody SeasonDTO resource) {
         if (getSeasonByCode(resource.getCode()).getResponseObject() != null) {
             //Season already exists

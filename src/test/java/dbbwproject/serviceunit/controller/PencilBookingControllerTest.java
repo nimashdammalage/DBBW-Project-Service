@@ -3,8 +3,8 @@ package dbbwproject.serviceunit.controller;
 import dbbwproject.serviceunit.config.FireBaseAppConfig;
 import dbbwproject.serviceunit.config.FirebaseAuthAndDBConfig;
 import dbbwproject.serviceunit.config.ObjectMapperConfig;
-import dbbwproject.serviceunit.dto.TripDTO;
-import dbbwproject.serviceunit.dto.TripStatus;
+import dbbwproject.serviceunit.dto.PencilBookingDTO;
+import dbbwproject.serviceunit.dto.PencilBookingStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +14,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
-
 import static dbbwproject.serviceunit.controller.SeasonControllerTest.asJsonString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -22,51 +21,52 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Import({FirebaseAuthAndDBConfig.class, FireBaseAppConfig.class, ObjectMapperConfig.class})
 @RunWith(SpringRunner.class)
-@WebMvcTest(TripController.class)
-class TripControllerTest {
+@WebMvcTest(PencilBookingController.class)
+class PencilBookingControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
     @Test
-    public void testTripGETbySeason() throws Exception {
-        System.out.println(mockMvc.perform(
-                get("/resource-management/seasons/{seasonCode}/trips", "6rdCode")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
-        )
-                .andDo(print())
-                .andExpect(status().isOk()));
-    }
-
-    @Test
-    public void testTripPOST() throws Exception {
-        TripDTO trip1 = new TripDTO("trip1", "6rdCode", 500, "2018-01-13", "2019-02-19", "2020-10-15", TripStatus.COMPLETED);
+    public void testPencilBookingPOST() throws Exception {
+        PencilBookingDTO pb = new PencilBookingDTO("season2", "trip12", "Nadeesha", "771650539", 5, "2018-11-24", PencilBookingStatus.CUSTOMER_NOT_ARRIVED);
         mockMvc.perform(
-                post("/resource-management/seasons/{seasonCode}/trips", "6rdCode")
-                        .content(asJsonString(trip1))
+                post("/resource-management/seasons/{seasonCode}/trips/{tripCode}/pencil-bookings", "season2", "trip12")
+                        .content(asJsonString(pb))
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
         )
                 .andDo(print())
                 .andExpect(status().isOk());
     }
+
     @Test
-    public void testTripGETbySeasonAndTrip() throws Exception {
-        System.out.println(mockMvc.perform(
-                get("/resource-management/seasons/{seasonCode}/trips/{tripCode}", "3rdCode","trip1")
+    public void testPencilBookingGET() throws Exception {
+        mockMvc.perform(
+                get("/resource-management/seasons/{seasonCode}/trips/{tripCode}/pencil-bookings/{personName}", "season2", "trip12", "Nadeesha")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
         )
                 .andDo(print())
-                .andExpect(status().isOk()));
+                .andExpect(status().isOk());
     }
 
     @Test
-    public void testTripput() throws Exception {
-        TripDTO trip1 = new TripDTO("trip1", "6rdCode", 1000, "2018-01-14", "2019-02-14", "2020-10-14", TripStatus.WORKING);
+    public void testPencilBookingGETbyTrip() throws Exception {
         mockMvc.perform(
-                put("/resource-management/seasons/{seasonCode}/trips/{tripCode}", "6rdCode","trip1")
-                        .content(asJsonString(trip1))
+                get("/resource-management/seasons/{seasonCode}/trips/{tripCode}/pencil-bookings", "season2", "trip12")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+        )
+                .andDo(print())
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void testPencilBookingPut() throws Exception {
+        PencilBookingDTO pb = new PencilBookingDTO("season2", "trip12", "Nadeesha", "777777", 555, "2018-11-24", PencilBookingStatus.CUSTOMER_NOT_ARRIVED);
+        mockMvc.perform(
+                put("/resource-management/seasons/{seasonCode}/trips/{tripCode}/pencil-bookings/{personName}", "season2", "trip12", "Nadeesha")
+                        .content(asJsonString(pb))
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
         )
@@ -77,7 +77,7 @@ class TripControllerTest {
     @Test
     public void testTripDelete() throws Exception {
         mockMvc.perform(
-                delete("/resource-management/seasons/{seasonCode}/trips/{tripCode}", "6rdCode","trip1")
+                delete("/resource-management/seasons/{seasonCode}/trips/{tripCode}/pencil-bookings/{personName}", "season2", "trip12", "Nadeesha")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
         )

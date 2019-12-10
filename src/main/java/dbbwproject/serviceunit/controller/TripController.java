@@ -1,5 +1,6 @@
 package dbbwproject.serviceunit.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dbbwproject.serviceunit.dto.TripDTO;
 import dbbwproject.serviceunit.dto.TripStatus;
 import dbbwproject.serviceunit.dto.response.ErrStatus;
@@ -8,6 +9,7 @@ import dbbwproject.serviceunit.dto.response.ResponseWrapperList;
 import dbbwproject.serviceunit.firebasehandler.AccessTokenGenrator;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,17 +23,17 @@ import java.util.Map;
 
 //@CrossOrigin(origins = "http://localhost:4200")
 @RestController
-@RequestMapping("/resource-management/seasons")
+@RequestMapping("/resource-management/seasons/")
 @Api(value = "Trip Management", description = "handling trip resource operations")
-public class TripController extends ResourseContoller{
+public class TripController extends ResourseContoller {
     private final String TRIP_PATH = "/trips";
 
     @Autowired
-    public TripController(RestTemplate restTemplate) {
-        super(restTemplate);
+    public TripController(RestTemplate restTemplate, ModelMapper modelMapper, ObjectMapper objectMapper) {
+        super(restTemplate, modelMapper, objectMapper);
     }
 
-    @GetMapping("/trip-status")
+    @GetMapping("trip-status")
     @ApiOperation(value = "Retrieve a list of all trip status", response = ResponseWrapperList.class)
     public ResponseWrapperList<TripStatus> getAllTripStatus() {
         return new ResponseWrapperList<>(ErrStatus.SUCCESS, Arrays.asList(TripStatus.values()));
@@ -127,7 +129,7 @@ public class TripController extends ResourseContoller{
 
     @DeleteMapping("{seasonCode}/trips/{tripCode}")
     @ApiOperation(value = "Delete a trip", response = ResponseWrapper.class)
-    public ResponseWrapper<TripDTO> deleteTripByCode(@PathVariable String seasonCode,@PathVariable String tripCode) {
+    public ResponseWrapper<TripDTO> deleteTripByCode(@PathVariable String seasonCode, @PathVariable String tripCode) {
         if (getTripByCode(seasonCode, tripCode).getResponseObject() == null) {
             //Trip not exists
             return new ResponseWrapper<>(ErrStatus.ERROR, null, "trip with code: " + tripCode + " and season: " + seasonCode + " does not exist for deletion");

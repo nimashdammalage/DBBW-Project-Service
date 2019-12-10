@@ -3,7 +3,7 @@ package dbbwproject.serviceunit.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dbbwproject.serviceunit.config.FireBaseAppConfig;
 import dbbwproject.serviceunit.config.FirebaseAuthAndDBConfig;
-import dbbwproject.serviceunit.config.ModelMapperConfig;
+import dbbwproject.serviceunit.config.ObjectMapperConfig;
 import dbbwproject.serviceunit.dto.SeasonDTO;
 import dbbwproject.serviceunit.dto.SeasonStatus;
 import org.junit.jupiter.api.Test;
@@ -19,7 +19,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@Import({FirebaseAuthAndDBConfig.class, FireBaseAppConfig.class, ModelMapperConfig.class})
+@Import({FirebaseAuthAndDBConfig.class, FireBaseAppConfig.class, ObjectMapperConfig.class})
 @RunWith(SpringRunner.class)
 @WebMvcTest(SeasonController.class)
 class SeasonControllerTest {

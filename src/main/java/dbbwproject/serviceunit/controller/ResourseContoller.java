@@ -1,10 +1,14 @@
 package dbbwproject.serviceunit.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.client.RestTemplate;
 
 public abstract class ResourseContoller {
-    protected final RestTemplate restTemplate;
+    final RestTemplate restTemplate;
+    final ObjectMapper objectMapper;
+    final ModelMapper modelMapper;
 
     @Value("${firebase.realtime-database-url}")
     protected String fireBaseDBUrl;
@@ -12,7 +16,9 @@ public abstract class ResourseContoller {
     @Value("${firebase.service-account-filename}")
     protected String serviceAccountKeyPath;
 
-    protected ResourseContoller(RestTemplate restTemplate) {
+    public ResourseContoller(RestTemplate restTemplate, ModelMapper modelMapper, ObjectMapper objectMapper) {
         this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
+        this.modelMapper = modelMapper;
     }
 }
