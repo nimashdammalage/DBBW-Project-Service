@@ -40,7 +40,7 @@ class TripControllerTest {
 
     @Test
     public void testTripPOST() throws Exception {
-        TripDTO trip1 = new TripDTO("trip1", "6rdCode", 500, "2018-01-13", "2019-02-19", "2020-10-15", TripStatus.COMPLETED);
+        TripDTO trip1 = new TripDTO("trip1", "6rdCode", 500, "2018-01-13", "2019-02-19", "2020-10-15", 150, TripStatus.COMPLETED);
         mockMvc.perform(
                 post("/resource-management/seasons/{seasonCode}/trips", "6rdCode")
                         .content(asJsonString(trip1))
@@ -50,10 +50,11 @@ class TripControllerTest {
                 .andDo(print())
                 .andExpect(status().isOk());
     }
+
     @Test
     public void testTripGETbySeasonAndTrip() throws Exception {
         System.out.println(mockMvc.perform(
-                get("/resource-management/seasons/{seasonCode}/trips/{tripCode}", "3rdCode","trip1")
+                get("/resource-management/seasons/{seasonCode}/trips/{tripCode}", "3rdCode", "trip1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
         )
@@ -63,9 +64,9 @@ class TripControllerTest {
 
     @Test
     public void testTripput() throws Exception {
-        TripDTO trip1 = new TripDTO("trip1", "6rdCode", 1000, "2018-01-14", "2019-02-14", "2020-10-14", TripStatus.WORKING);
+        TripDTO trip1 = new TripDTO("trip1", "6rdCode", 1000, "2018-01-14", "2019-02-14", "2020-10-14", 120, TripStatus.WORKING);
         mockMvc.perform(
-                put("/resource-management/seasons/{seasonCode}/trips/{tripCode}", "6rdCode","trip1")
+                put("/resource-management/seasons/{seasonCode}/trips/{tripCode}", "6rdCode", "trip1")
                         .content(asJsonString(trip1))
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
@@ -77,7 +78,7 @@ class TripControllerTest {
     @Test
     public void testTripDelete() throws Exception {
         mockMvc.perform(
-                delete("/resource-management/seasons/{seasonCode}/trips/{tripCode}", "6rdCode","trip1")
+                delete("/resource-management/seasons/{seasonCode}/trips/{tripCode}", "6rdCode", "trip1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
         )

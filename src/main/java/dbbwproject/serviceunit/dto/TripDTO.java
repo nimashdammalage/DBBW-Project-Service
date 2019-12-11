@@ -23,6 +23,8 @@ public class TripDTO {
     private String endDate;
     @ApiModelProperty(notes = "Date which all passports should be handover to Mahamega office on or before, by customers who participated to trip in YYYY-MM-DD format", example = "2018-02-26")
     private String ppColDate;
+    @ApiModelProperty(notes = "Total number of passengers attend to trip", example = "200")
+    private int passengerCount;
     @ApiModelProperty(notes = "Status of the trip(Ex:WORKING)", allowableValues = "WORKING,COMPLETED")
     private TripStatus tripStatus;
 }

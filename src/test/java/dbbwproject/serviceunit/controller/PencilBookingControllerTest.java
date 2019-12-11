@@ -28,7 +28,7 @@ class PencilBookingControllerTest {
 
     @Test
     public void testPencilBookingPOST() throws Exception {
-        PencilBookingDTO pb = new PencilBookingDTO("season2", "trip12", "Nadeesha", "771650539", 5, "2018-11-24", PencilBookingStatus.CUSTOMER_NOT_ARRIVED);
+        PencilBookingDTO pb = new PencilBookingDTO("season2", "trip12", "Nadeesha", "771650539", 5, "001,002,005,006,008", "2018-11-24", PencilBookingStatus.CUSTOMER_NOT_ARRIVED);
         mockMvc.perform(
                 post("/resource-management/seasons/{seasonCode}/trips/{tripCode}/pencil-bookings", "season2", "trip12")
                         .content(asJsonString(pb))
@@ -63,7 +63,7 @@ class PencilBookingControllerTest {
 
     @Test
     public void testPencilBookingPut() throws Exception {
-        PencilBookingDTO pb = new PencilBookingDTO("season2", "trip12", "Nadeesha", "777777", 555, "2018-11-24", PencilBookingStatus.CUSTOMER_NOT_ARRIVED);
+        PencilBookingDTO pb = new PencilBookingDTO("season2", "trip12", "Nadeesha", "777777", 100, "101,102,105,106,108", "2018-11-24", PencilBookingStatus.CUSTOMER_NOT_ARRIVED);
         mockMvc.perform(
                 put("/resource-management/seasons/{seasonCode}/trips/{tripCode}/pencil-bookings/{personName}", "season2", "trip12", "Nadeesha")
                         .content(asJsonString(pb))
