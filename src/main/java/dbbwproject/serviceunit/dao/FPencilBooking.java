@@ -1,6 +1,5 @@
-package dbbwproject.serviceunit.firebasehandler.jsonobjects;
+package dbbwproject.serviceunit.dao;
 
-import dbbwproject.serviceunit.dto.PencilBookingDTO;
 import dbbwproject.serviceunit.dto.PencilBookingStatus;
 import lombok.*;
 

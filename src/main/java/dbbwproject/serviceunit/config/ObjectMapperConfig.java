@@ -1,7 +1,7 @@
 package dbbwproject.serviceunit.config;
 
 import dbbwproject.serviceunit.dto.PencilBookingDTO;
-import dbbwproject.serviceunit.firebasehandler.jsonobjects.FPencilBooking;
+import dbbwproject.serviceunit.dao.FPencilBooking;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.PropertyMap;
 import org.modelmapper.convention.MatchingStrategies;
