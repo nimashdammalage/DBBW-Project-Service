@@ -3,6 +3,8 @@ package dbbwproject.serviceunit.dao;
 import dbbwproject.serviceunit.dto.TripStatus;
 import lombok.*;
 
+import java.time.LocalDate;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -12,9 +14,9 @@ public class FTrip {
     private String code;
     private String seasonCode;
     private int perPersonCost;
-    private String startDate;
-    private String endDate;
-    private String ppColDate;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private LocalDate ppColDate;
     private int passengerCount;
     private TripStatus tripStatus;
 }

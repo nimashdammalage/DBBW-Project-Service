@@ -1,0 +1,34 @@
+package dbbwproject.serviceunit;
+
+import dbbwproject.serviceunit.config.FireBaseAppConfig;
+import dbbwproject.serviceunit.config.FirebaseAuthAndDBConfig;
+import dbbwproject.serviceunit.config.ObjectMapperConfig;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.junit4.SpringRunner;
+
+import java.time.LocalDate;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+@Import({ObjectMapperConfig.class})
+@RunWith(SpringRunner.class)
+public class ModelMapperTest {
+
+    @Autowired
+    ModelMapper modelMapper;
+
+    @Test
+    public void test() {
+        String dateTest = "2000-09-27";
+        LocalDate dateConverted = modelMapper.map(dateTest, LocalDate.class);
+        System.out.println("output: \n\n");
+        assertEquals(dateConverted.toString(),"2000-09-27");
+
+        LocalDate localDate = LocalDate.of(2018, 2, 15);
+        assertEquals(modelMapper.map(localDate, String.class),"2018-09-27");
+    }
+}
