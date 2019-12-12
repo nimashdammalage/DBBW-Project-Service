@@ -17,7 +17,7 @@ public class PencilBookingDTO {
     private String tripCode;
     @ApiModelProperty(notes = "Name of the customer of pencil booking. Note that (seasonCode,tripCode,Name) is unique", example = "Gunasekara", required = true)
     private String personName;
-    @ApiModelProperty(notes = "Telephone Number of the customer of pencil booking.", example = "Gunasekara", required = true)
+    @ApiModelProperty(notes = "Telephone Number of the customer of pencil booking.", example = "771650589", required = true)
     private String tpNo;
     @ApiModelProperty(notes = "Count of the people who supposed to attend to trip with the customer of pencil booking.", example = "5")
     private int seatCount;
@@ -27,6 +27,6 @@ public class PencilBookingDTO {
     private String registrationNumbers;
     @ApiModelProperty(notes = "Date which the customer of pencil booking should come to Mahamega office with documents for first meet up.", example = "2020-01-18")
     private String meetUpDate;
-    @ApiModelProperty(notes = "Status whether the customer of pencil booking arrived for first meet up (on or before meetup date).", example = "2020-01-18")
+    @ApiModelProperty(notes = "Status whether the customer of pencil booking arrived for first meet up (on or before meetup date).", example = "CUSTOMER_NOT_ARRIVED")
     private PencilBookingStatus pencilBookingStatus;
 }

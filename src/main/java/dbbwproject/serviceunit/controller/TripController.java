@@ -1,40 +1,38 @@
 package dbbwproject.serviceunit.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.Query;
 import dbbwproject.serviceunit.dto.TripDTO;
 import dbbwproject.serviceunit.dto.TripStatus;
 import dbbwproject.serviceunit.dto.response.ErrStatus;
 import dbbwproject.serviceunit.dto.response.ResponseWrapper;
 import dbbwproject.serviceunit.dto.response.ResponseWrapperList;
-import dbbwproject.serviceunit.firebasehandler.AccessTokenGenrator;
+import dbbwproject.serviceunit.dao.FTrip;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Map;
+import java.util.List;
 
 //@CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("/resource-management/seasons/")
 @Api(value = "Trip Management", description = "handling trip resource operations")
-public class TripController extends ResourseContoller {
-    private final String TRIP_PATH = "/trips";
+public class TripController extends ResourseController {
+    private static final String localResourcePath = "/trips";
 
     @Autowired
-    public TripController(RestTemplate restTemplate, ModelMapper modelMapper, ObjectMapper objectMapper) {
-        super(restTemplate, modelMapper, objectMapper);
+    public TripController(ModelMapper modelMapper, FirebaseApp firebaseApp) {
+        super(modelMapper, firebaseApp, localResourcePath);
     }
 
-    @GetMapping("trip-status")
     @ApiOperation(value = "Retrieve a list of all trip status", response = ResponseWrapperList.class)
+    @GetMapping("trip-status")
     public ResponseWrapperList<TripStatus> getAllTripStatus() {
         return new ResponseWrapperList<>(ErrStatus.SUCCESS, Arrays.asList(TripStatus.values()));
     }
@@ -42,64 +40,46 @@ public class TripController extends ResourseContoller {
     @GetMapping("{seasonCode}/trips")
     @ApiOperation(value = "Retrieve a list of all trips belong to a season", response = ResponseWrapperList.class)
     public ResponseWrapperList<TripDTO> getAllTripsForSeason(@PathVariable String seasonCode) {
-        String accessToken;
-        try {
-            accessToken = AccessTokenGenrator.getAccessToken(serviceAccountKeyPath);
-        } catch (IOException e) {
-            return new ResponseWrapperList<>(ErrStatus.ERROR, null, "unable to generate firebase access token" + e.getMessage());
+        Query query = dbRef.orderByChild("seasonCode").equalTo(seasonCode);
+        ResponseWrapperList<FTrip> result = retrieveDataList(FTrip.class, query);
+        if (result.getStatus() == ErrStatus.ERROR) {
+            return new ResponseWrapperList<>(ErrStatus.ERROR, null, result.getErrorMsg());
         }
-        String url = fireBaseDBUrl + "/" + TRIP_PATH + ".json?orderBy=\"seasonCode\"&equalTo=\"" + seasonCode + "\"&" + "access_token=" + accessToken;
-        Map<String, TripDTO> result = restTemplate.getForObject(url, Map.class);
-        if (result == null) {
-            return new ResponseWrapperList<>(ErrStatus.ERROR, null, "error in getAllTrips for season");
-        }
-        return new ResponseWrapperList<>(ErrStatus.SUCCESS, new ArrayList<>(result.values()), null);
+        java.lang.reflect.Type tripDTOListType = new TypeToken<List<TripDTO>>() {
+        }.getType();
+        return new ResponseWrapperList<>(ErrStatus.SUCCESS, modelMapper.map(result.getResponseObjectList(), tripDTOListType));
     }
 
     @GetMapping("{seasonCode}/trips/{tripCode}")
     @ApiOperation(value = "Retrieve trip by code", response = ResponseWrapper.class)
     public ResponseWrapper<TripDTO> getTripByCode(@PathVariable String seasonCode, @PathVariable String tripCode) {
-        String accessToken;
-        try {
-            accessToken = AccessTokenGenrator.getAccessToken(serviceAccountKeyPath);
-        } catch (IOException e) {
-            return new ResponseWrapper<>(ErrStatus.ERROR, null, "unable to generate firebase access token" + e.getMessage());
+        ResponseWrapper<FTrip> res = retrieveData(FTrip.class, dbRef.child(seasonCode + "_" + tripCode));
+        if (res.getResponseObject() == null) {
+            return new ResponseWrapper<>(res.getStatus(), null, res.getErrorMsg());
         }
-        String url = fireBaseDBUrl + "/" + TRIP_PATH + "/" + seasonCode + "_" + tripCode + ".json?access_token=" + accessToken;
-        ResponseEntity<TripDTO> result = restTemplate.getForEntity(url, TripDTO.class);
-        if (!result.getStatusCode().equals(HttpStatus.OK)) {
-            return new ResponseWrapper<>(ErrStatus.ERROR, null, "error in call firebase get method" + result.getBody().toString());
-        }
-        return new ResponseWrapper<>(ErrStatus.SUCCESS, result.getBody());
+        return new ResponseWrapper<>(res.getStatus(), modelMapper.map(res.getResponseObject(), TripDTO.class));
     }
 
     @PutMapping("{seasonCode}/trips/{tripCode}")
     @ApiOperation(value = "Modify existing trip by code", response = ResponseWrapper.class)
     public ResponseWrapper<TripDTO> modifyTripByCode(@PathVariable String seasonCode, @PathVariable String tripCode, @RequestBody TripDTO resource) {
         if (!tripCode.equals(resource.getCode())) {
-            return new ResponseWrapper<>(ErrStatus.ERROR, null, "trip code: " + resource.getCode() + "and code in url: " + tripCode + " does not match");
+            return new ResponseWrapper<>(ErrStatus.ERROR, null, "trip code: " + resource.getCode() + " and code in url: " + tripCode + " does not match");
         }
         if (!seasonCode.equals(resource.getSeasonCode())) {
-            return new ResponseWrapper<>(ErrStatus.ERROR, null, "season code: " + resource.getSeasonCode() + "and code in url: " + seasonCode + " does not match");
-        }
-        if (getTripByCode(seasonCode, tripCode).getResponseObject() == null) {
-            //Trip not exists
-            return new ResponseWrapper<>(ErrStatus.ERROR, null, "trip with code: " + resource.getCode() + " and season: " + seasonCode + " does not exist in DB for modification");
+            return new ResponseWrapper<>(ErrStatus.ERROR, null, "season code: " + resource.getSeasonCode() + " and code in url: " + seasonCode + " does not match");
         }
 
-        String accessToken;
-        try {
-            accessToken = AccessTokenGenrator.getAccessToken(serviceAccountKeyPath);
-        } catch (IOException e) {
-            return new ResponseWrapper<>(ErrStatus.ERROR, null, "unable to generate firebase access token" + e.getMessage());
+        FTrip fTrip = modelMapper.map(resource, FTrip.class);
+        String key = seasonCode + "_" + tripCode;
+        String errMsg = "trip with code " + tripCode + " and season: " + seasonCode + " does not exist in database";
+        ResponseWrapper<TripDTO> res = retrieveDataAvailability(TripDTO.class, FTrip.class, dbRef.child(key), errMsg);
+        if (res.getStatus() == ErrStatus.DATA_UNAVAILABLE) {
+            res.setStatus(ErrStatus.ERROR);
+            return res;
         }
-        String url = fireBaseDBUrl + TRIP_PATH + "/" + seasonCode + "_" + tripCode + ".json?access_token=" + accessToken;
-        restTemplate.put(url, resource, TripDTO.class);
-        TripDTO updatedTrip = getTripByCode(seasonCode, tripCode).getResponseObject();
-        if (updatedTrip == null) {
-            return new ResponseWrapper<>(ErrStatus.ERROR, null, "error in calling in firebase API");
-        }
-        return new ResponseWrapper<>(ErrStatus.SUCCESS, updatedTrip);
+        DatabaseReference dbr = dbRef.child(key);
+        return insertDataToDB(TripDTO.class, fTrip, dbr);
     }
 
     @PostMapping("{seasonCode}/trips")
@@ -111,38 +91,31 @@ public class TripController extends ResourseContoller {
         if (!seasonCode.equals(resource.getSeasonCode())) {
             return new ResponseWrapper<>(ErrStatus.ERROR, null, "season code in resource does not match with path variable");
         }
-        if (getTripByCode(seasonCode, resource.getCode()).getResponseObject() != null) {
-            //Trip already exists
-            return new ResponseWrapper<>(ErrStatus.ERROR, null, "trip with code: " + resource.getCode() + " and season: " + seasonCode + " already exists");
-        }
 
-        String accessToken;
-        try {
-            accessToken = AccessTokenGenrator.getAccessToken(serviceAccountKeyPath);
-        } catch (IOException e) {
-            return new ResponseWrapper<>(ErrStatus.ERROR, null, "unable to generate firebase access token" + e.getMessage());
+        FTrip fTrip = modelMapper.map(resource, FTrip.class);
+        String key = seasonCode + "_" + resource.getCode();
+        String errMsg = "trip with code: " + resource.getCode() + " and season: " + seasonCode + " already exists in database";
+        ResponseWrapper<TripDTO> res = retrieveDataAvailability(TripDTO.class, FTrip.class, dbRef.child(key), errMsg);
+        if (res.getStatus() == ErrStatus.DATA_AVAILABLE) {
+            res.setStatus(ErrStatus.ERROR);
+            return res;
         }
-        String url = fireBaseDBUrl + TRIP_PATH + "/" + seasonCode + "_" + resource.getCode() + ".json?access_token=" + accessToken;
-        restTemplate.put(url, resource, TripDTO.class);
-        return new ResponseWrapper<>(ErrStatus.SUCCESS, null);
+        DatabaseReference dbr = dbRef.child(key);
+        return insertDataToDB(TripDTO.class, fTrip, dbr);
     }
 
     @DeleteMapping("{seasonCode}/trips/{tripCode}")
     @ApiOperation(value = "Delete a trip", response = ResponseWrapper.class)
     public ResponseWrapper<TripDTO> deleteTripByCode(@PathVariable String seasonCode, @PathVariable String tripCode) {
-        if (getTripByCode(seasonCode, tripCode).getResponseObject() == null) {
-            //Trip not exists
-            return new ResponseWrapper<>(ErrStatus.ERROR, null, "trip with code: " + tripCode + " and season: " + seasonCode + " does not exist for deletion");
+        String key = seasonCode + "_" + tripCode;
+        String errMsg = "trip with code: " + tripCode + " and season code: " + seasonCode + " does not exist in database for deletion";
+        ResponseWrapper<TripDTO> res = retrieveDataAvailability(TripDTO.class, FTrip.class, dbRef.child(key), errMsg);
+        if (res.getStatus() == ErrStatus.DATA_UNAVAILABLE) {
+            res.setStatus(ErrStatus.ERROR);
+            return res;
         }
-        String accessToken;
-        try {
-            accessToken = AccessTokenGenrator.getAccessToken(serviceAccountKeyPath);
-        } catch (IOException e) {
-            return new ResponseWrapper<>(ErrStatus.ERROR, null, "unable to generate firebase access token" + e.getMessage());
-        }
-        String url = fireBaseDBUrl + TRIP_PATH + "/" + seasonCode + "_" + tripCode + ".json?access_token=" + accessToken;
-        restTemplate.delete(url);
-        return new ResponseWrapper<>(ErrStatus.SUCCESS, null);
+        DatabaseReference dbr = dbRef.child(key);
+        return deleteDataFromDB(TripDTO.class, dbr);
     }
 
 }

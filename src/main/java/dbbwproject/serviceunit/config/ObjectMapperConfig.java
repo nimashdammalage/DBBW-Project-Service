@@ -1,6 +1,5 @@
 package dbbwproject.serviceunit.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import dbbwproject.serviceunit.dto.PencilBookingDTO;
 import dbbwproject.serviceunit.firebasehandler.jsonobjects.FPencilBooking;
 import org.modelmapper.ModelMapper;
@@ -28,10 +27,5 @@ public class ObjectMapperConfig {
         modelMapper.createTypeMap(PencilBookingDTO.class, FPencilBooking.class).addMappings(pm1);
         modelMapper.validate(); // test that all fields are mapped
         return modelMapper;
-    }
-
-    @Bean
-    ObjectMapper createobjectMapper() {
-        return new ObjectMapper();
     }
 }

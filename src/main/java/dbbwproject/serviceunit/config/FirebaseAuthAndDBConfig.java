@@ -23,14 +23,4 @@ public class FirebaseAuthAndDBConfig {
     FirebaseAuth createFirebaseAuth() {
         return FirebaseAuth.getInstance(firebaseApp);
     }
-
-    @Bean
-    FirebaseDatabase createFirebaseDatabase() {
-        return FirebaseDatabase.getInstance(firebaseApp);
-    }
-
-    @Bean
-    RestTemplate createRestTemplate() {
-        return new RestTemplate();
-    }
 }
