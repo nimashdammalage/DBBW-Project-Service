@@ -11,12 +11,13 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @ToString
 public class FTrip {
+    public static final String key = "trips";
     private String code;
     private String seasonCode;
     private int perPersonCost;
-    private LocalDate startDate;
-    private LocalDate endDate;
-    private LocalDate ppColDate;
+    private long startDate;
+    private long endDate;
+    private long ppColDate;
     private int passengerCount;
     private TripStatus tripStatus;
 }

@@ -3,119 +3,147 @@ package dbbwproject.serviceunit.controller;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.Query;
+import dbbwproject.serviceunit.dao.FPencilBooking;
+import dbbwproject.serviceunit.dao.FSeason;
+import dbbwproject.serviceunit.dto.SeasonStatus;
 import dbbwproject.serviceunit.dto.TripDTO;
 import dbbwproject.serviceunit.dto.TripStatus;
-import dbbwproject.serviceunit.dto.response.ErrStatus;
-import dbbwproject.serviceunit.dto.response.ResponseWrapper;
-import dbbwproject.serviceunit.dto.response.ResponseWrapperList;
 import dbbwproject.serviceunit.dao.FTrip;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 //@CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("/resource-management/seasons/")
 @Api(value = "Trip Management", description = "handling trip resource operations")
 public class TripController extends ResourseController {
-    private static final String localResourcePath = "/trips";
 
     @Autowired
     public TripController(ModelMapper modelMapper, FirebaseApp firebaseApp) {
-        super(modelMapper, firebaseApp, localResourcePath);
+        super(modelMapper, firebaseApp);
     }
 
-    @ApiOperation(value = "Retrieve a list of all trip status", response = ResponseWrapperList.class)
-    @GetMapping("trip-status")
-    public ResponseWrapperList<TripStatus> getAllTripStatus() {
-        return new ResponseWrapperList<>(ErrStatus.SUCCESS, Arrays.asList(TripStatus.values()));
+    @ApiOperation(value = "Retrieve a list of all trip status", response = ResponseEntity.class)
+    @GetMapping("trips/trip-status")
+    public ResponseEntity<List<TripStatus>> getAllTripStatus() {
+        return new ResponseEntity<>(Arrays.asList(TripStatus.values()), HttpStatus.OK);
+    }
+
+    @GetMapping("{seasonCode}/trips/{tripCode}/booked-seat-numbers")
+    @ApiOperation(value = "Retrieve a list of all pencil booking status", response = ResponseEntity.class)
+    public ResponseEntity<List<Integer>> getBookedSeatNumbersForTrip(@PathVariable String seasonCode, @PathVariable String tripCode) {
+        String key = seasonCode + "_" + tripCode;
+        String seasonNotExist = "season with code: " + seasonCode + " does not exist in database";
+        String tripNotExist = "trip with code " + tripCode + " and season: " + seasonCode + " does not exist in database";
+        ValidateResource.validateDataAvailability(FSeason.class, true, dbRef.child(FSeason.key).child(seasonCode), seasonNotExist);
+        ValidateResource.validateDataAvailability(FTrip.class, true, dbRef.child(FTrip.key).child(key), tripNotExist);
+
+        Query query = dbRef.child(FPencilBooking.key).orderByChild("tripSeasonIndex").equalTo(key);
+        ResponseEntity<List<FPencilBooking>> result = retrieveDataList(FPencilBooking.class, query);
+        if (result.getStatusCode() != HttpStatus.OK) {
+            return new ResponseEntity<>(result.getStatusCode());
+        }
+
+        //collect data
+        List<String> regNumberStrings = result.getBody().stream().map(pb -> pb.getRegistrationNumbers()).collect(Collectors.toList());
+        List<Integer> regNumList = new ArrayList<>();
+        for (String regNumberString : regNumberStrings) {
+            if (regNumberStrings != null && !regNumberString.isEmpty())
+                regNumList.addAll(Arrays.asList(regNumberString.split(",")).stream().filter(s -> s != null && !s.trim().isEmpty()).map(n -> Integer.parseInt(n)).collect(Collectors.toList()));
+        }
+        return new ResponseEntity<>(regNumList, HttpStatus.OK);
     }
 
     @GetMapping("{seasonCode}/trips")
-    @ApiOperation(value = "Retrieve a list of all trips belong to a season", response = ResponseWrapperList.class)
-    public ResponseWrapperList<TripDTO> getAllTripsForSeason(@PathVariable String seasonCode) {
-        Query query = dbRef.orderByChild("seasonCode").equalTo(seasonCode);
-        ResponseWrapperList<FTrip> result = retrieveDataList(FTrip.class, query);
-        if (result.getStatus() == ErrStatus.ERROR) {
-            return new ResponseWrapperList<>(ErrStatus.ERROR, null, result.getErrorMsg());
+    @ApiOperation(value = "Retrieve a list of all trips belong to a season", response = ResponseEntity.class)
+    public ResponseEntity<List<TripDTO>> getAllTripsForSeason(@PathVariable String seasonCode) {
+        Query query = dbRef.child(FTrip.key).orderByChild("seasonCode").equalTo(seasonCode);
+        ResponseEntity<List<FTrip>> fseasons = retrieveDataList(FTrip.class, query);
+        if (fseasons.getStatusCode() != HttpStatus.OK) {
+            return new ResponseEntity<>(fseasons.getStatusCode());
         }
         java.lang.reflect.Type tripDTOListType = new TypeToken<List<TripDTO>>() {
         }.getType();
-        return new ResponseWrapperList<>(ErrStatus.SUCCESS, modelMapper.map(result.getResponseObjectList(), tripDTOListType));
+        if (fseasons.getBody() == null || fseasons.getBody().isEmpty()) {
+            return new ResponseEntity<>(new ArrayList<>(), HttpStatus.OK);
+        }
+        List<TripDTO> map = modelMapper.map(fseasons.getBody(), tripDTOListType);
+        return new ResponseEntity<>(map, HttpStatus.OK);
     }
 
     @GetMapping("{seasonCode}/trips/{tripCode}")
-    @ApiOperation(value = "Retrieve trip by code", response = ResponseWrapper.class)
-    public ResponseWrapper<TripDTO> getTripByCode(@PathVariable String seasonCode, @PathVariable String tripCode) {
-        ResponseWrapper<FTrip> res = retrieveData(FTrip.class, dbRef.child(seasonCode + "_" + tripCode));
-        if (res.getResponseObject() == null) {
-            return new ResponseWrapper<>(res.getStatus(), null, res.getErrorMsg());
+    @ApiOperation(value = "Retrieve trip by code", response = ResponseEntity.class)
+    public ResponseEntity<TripDTO> getTripByCode(@PathVariable String seasonCode, @PathVariable String tripCode) {
+        String key = seasonCode + "_" + tripCode;
+        ResponseEntity<FTrip> res = retrieveData(FTrip.class, dbRef.child(FTrip.key).child(key));
+        if (res.getStatusCode() != HttpStatus.OK) {
+            return new ResponseEntity<>(res.getStatusCode());
         }
-        return new ResponseWrapper<>(res.getStatus(), modelMapper.map(res.getResponseObject(), TripDTO.class));
+        if (res.getBody() == null) {
+            new ResponseEntity<>(HttpStatus.OK);
+        }
+        return new ResponseEntity<>(modelMapper.map(res.getBody(), TripDTO.class), HttpStatus.OK);
     }
 
     @PutMapping("{seasonCode}/trips/{tripCode}")
-    @ApiOperation(value = "Modify existing trip by code", response = ResponseWrapper.class)
-    public ResponseWrapper<TripDTO> modifyTripByCode(@PathVariable String seasonCode, @PathVariable String tripCode, @RequestBody TripDTO resource) {
-        if (!tripCode.equals(resource.getCode())) {
-            return new ResponseWrapper<>(ErrStatus.ERROR, null, "trip code: " + resource.getCode() + " and code in url: " + tripCode + " does not match");
-        }
-        if (!seasonCode.equals(resource.getSeasonCode())) {
-            return new ResponseWrapper<>(ErrStatus.ERROR, null, "season code: " + resource.getSeasonCode() + " and code in url: " + seasonCode + " does not match");
-        }
-
-        FTrip fTrip = modelMapper.map(resource, FTrip.class);
+    @ApiOperation(value = "Modify existing trip by code", response = ResponseEntity.class)
+    public ResponseEntity<TripDTO> modifyTripByCode(@PathVariable String seasonCode, @PathVariable String tripCode, @Valid @RequestBody TripDTO resource) {
         String key = seasonCode + "_" + tripCode;
-        String errMsg = "trip with code " + tripCode + " and season: " + seasonCode + " does not exist in database";
-        ResponseWrapper<TripDTO> res = retrieveDataAvailability(TripDTO.class, FTrip.class, dbRef.child(key), errMsg);
-        if (res.getStatus() == ErrStatus.DATA_UNAVAILABLE) {
-            res.setStatus(ErrStatus.ERROR);
-            return res;
-        }
-        DatabaseReference dbr = dbRef.child(key);
-        return insertDataToDB(TripDTO.class, fTrip, dbr);
+        FTrip fTrip = modelMapper.map(resource, FTrip.class);
+        String seasonNotExist = "season with code: " + seasonCode + " does not exist in database";
+        String tripNotExist = "trip with code " + tripCode + " and season: " + seasonCode + " does not exist in database";
+        String completedSeasonFound = "can not modify a trip in a completed season. season code : " + seasonCode;
+        ValidateResource.validateArgument(!tripCode.equals(resource.getCode()), "trip code: " + resource.getCode() + " and code in url: " + tripCode + " does not match");
+        ValidateResource.validateArgument(!seasonCode.equals(resource.getSeasonCode()), "season code: " + resource.getSeasonCode() + " and code in url: " + seasonCode + " does not match");
+        ValidateResource.validateDataAvailability(FSeason.class, true, dbRef.child(FSeason.key).child(seasonCode), seasonNotExist);
+        ValidateResource.validateDataAvailability(FTrip.class, true, dbRef.child(FTrip.key).child(key), tripNotExist);
+        ValidateResource.validateDataAvailability(FSeason.class, false, dbRef.child(FSeason.key).child(seasonCode).orderByChild("status").equalTo(SeasonStatus.COMPLETED.toString()), completedSeasonFound);
+
+        DatabaseReference dbr = dbRef.child(FTrip.key).child(key);
+        return insertDataToDB(fTrip, dbr);
     }
 
     @PostMapping("{seasonCode}/trips")
-    @ApiOperation(value = "Create a trip", response = ResponseWrapper.class)
-    public ResponseWrapper<TripDTO> createNewTrip(@PathVariable String seasonCode, @RequestBody TripDTO resource) {
-        if (resource.getCode() == null || resource.getCode().isEmpty()) {
-            return new ResponseWrapper<>(ErrStatus.ERROR, null, "trip code can not be empty or null");
-        }
-        if (!seasonCode.equals(resource.getSeasonCode())) {
-            return new ResponseWrapper<>(ErrStatus.ERROR, null, "season code in resource does not match with path variable");
-        }
-
-        FTrip fTrip = modelMapper.map(resource, FTrip.class);
+    @ApiOperation(value = "Create a trip", response = ResponseEntity.class)
+    public ResponseEntity<TripDTO> createNewTrip(@PathVariable String seasonCode, @Valid @RequestBody TripDTO resource) {
         String key = seasonCode + "_" + resource.getCode();
-        String errMsg = "trip with code: " + resource.getCode() + " and season: " + seasonCode + " already exists in database";
-        ResponseWrapper<TripDTO> res = retrieveDataAvailability(TripDTO.class, FTrip.class, dbRef.child(key), errMsg);
-        if (res.getStatus() == ErrStatus.DATA_AVAILABLE) {
-            res.setStatus(ErrStatus.ERROR);
-            return res;
-        }
-        DatabaseReference dbr = dbRef.child(key);
-        return insertDataToDB(TripDTO.class, fTrip, dbr);
+        FTrip fTrip = modelMapper.map(resource, FTrip.class);
+        String seasonNotExist = "season with code: " + seasonCode + " does not exist in database";
+        String tripAlreadyExists = "trip with code: " + resource.getCode() + " and season: " + seasonCode + " already exists in database";
+        String completedSeasonFound = "can not insert a trip into a completed season. season code : " + seasonCode;
+        ValidateResource.validateArgument(resource.getCode() == null || resource.getCode().isEmpty(), "trip code can not be empty or null");
+        ValidateResource.validateArgument(!seasonCode.equals(resource.getSeasonCode()), "season code in resource does not match with path variable");
+        ValidateResource.validateDataAvailability(FSeason.class, true, dbRef.child(FSeason.key).child(seasonCode), seasonNotExist);
+        ValidateResource.validateDataAvailability(FTrip.class, false, dbRef.child(FTrip.key).child(key), tripAlreadyExists);
+        ValidateResource.validateDataComparison(String.class, false, dbRef.child(FSeason.key).child(seasonCode).child("status"), SeasonStatus.COMPLETED.toString(), completedSeasonFound);
+
+        DatabaseReference dbr = dbRef.child(FTrip.key).child(key);
+        return insertDataToDB(fTrip, dbr);
     }
 
     @DeleteMapping("{seasonCode}/trips/{tripCode}")
-    @ApiOperation(value = "Delete a trip", response = ResponseWrapper.class)
-    public ResponseWrapper<TripDTO> deleteTripByCode(@PathVariable String seasonCode, @PathVariable String tripCode) {
+    @ApiOperation(value = "Delete a trip", response = ResponseEntity.class)
+    public ResponseEntity<TripDTO> deleteTripByCode(@PathVariable String seasonCode, @PathVariable String tripCode) {
         String key = seasonCode + "_" + tripCode;
-        String errMsg = "trip with code: " + tripCode + " and season code: " + seasonCode + " does not exist in database for deletion";
-        ResponseWrapper<TripDTO> res = retrieveDataAvailability(TripDTO.class, FTrip.class, dbRef.child(key), errMsg);
-        if (res.getStatus() == ErrStatus.DATA_UNAVAILABLE) {
-            res.setStatus(ErrStatus.ERROR);
-            return res;
-        }
-        DatabaseReference dbr = dbRef.child(key);
-        return deleteDataFromDB(TripDTO.class, dbr);
+        String tripNotExistForDeletion = "trip with code: " + tripCode + " and season code: " + seasonCode + " does not exist in database for deletion";
+        String linkedPenBookingExists = "pencil bookings with trip code: " + tripCode + " and season code: " + seasonCode + " found. season can not be deleted";
+        ValidateResource.validateDataAvailability(FTrip.class, true, dbRef.child(FTrip.key).child(key), tripNotExistForDeletion);
+        ValidateResource.validateDataAvailability(FPencilBooking.class, false, dbRef.child(FPencilBooking.key).orderByChild("tripSeasonIndex").equalTo(key), linkedPenBookingExists);
+
+        DatabaseReference dbr = dbRef.child(FTrip.key).child(key);
+        return deleteDataFromDB(dbr);
     }
 
 }

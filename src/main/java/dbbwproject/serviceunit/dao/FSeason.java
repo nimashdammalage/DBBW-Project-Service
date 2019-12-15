@@ -9,6 +9,7 @@ import lombok.*;
 @AllArgsConstructor
 @ToString
 public class FSeason {
+    public static final String key = "seasons";
     private String code;
     private SeasonStatus status;
 }

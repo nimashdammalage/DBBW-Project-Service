@@ -11,12 +11,14 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @ToString
 public class FPencilBooking {
+    public static final String key = "pencil-booking";
     private String seasonCode;
     private String tripCode;
     private String personName;
     private String tpNo;
     private int seatCount;
-    private LocalDate meetUpDate;
+    private String registrationNumbers;
+    private long meetUpDate;
     private PencilBookingStatus pencilBookingStatus;
     private String tripSeasonIndex;//combination of seasonCode_tripCode for indexing
 }

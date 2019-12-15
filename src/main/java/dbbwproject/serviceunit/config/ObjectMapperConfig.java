@@ -7,13 +7,16 @@ import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.sql.Date;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+
 
 @Configuration
 public class ObjectMapperConfig {
     @Bean
-    public ModelMapper modelMapper() {
+    public ModelMapper createModelMapper() {
         ModelMapper modelMapper = new ModelMapper();
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
         modelMapper.validate(); // test that all fields are mapped
@@ -28,25 +31,36 @@ public class ObjectMapperConfig {
         };
         modelMapper.createTypeMap(PencilBookingDTO.class, FPencilBooking.class).addMappings(pm1);
 
-        //String to LocalDate mappings
-        Provider<LocalDate> localDateProvider = new AbstractProvider<LocalDate>() {
+        //String to long mappings
+        Converter<String, Long> toStringDate = new AbstractConverter<String, Long>() {
             @Override
-            public LocalDate get() {
-                return LocalDate.now();
+            protected Long convert(String source) {
+                DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+                try {
+                    return df.parse(source).getTime();
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                throw new IllegalStateException("failed date conversion. model mapper object");
             }
         };
-        Converter<String, LocalDate> toStringDate = new AbstractConverter<String, LocalDate>() {
-            @Override
-            protected LocalDate convert(String source) {
-                DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                return LocalDate.parse(source, format);
-            }
-        };
-        modelMapper.createTypeMap(String.class, LocalDate.class);
+        modelMapper.createTypeMap(String.class, Long.class);
         modelMapper.addConverter(toStringDate);
-        modelMapper.getTypeMap(String.class, LocalDate.class).setProvider(localDateProvider);
 
-
+        Converter<Long, String> toLongDate = new AbstractConverter<Long, String>() {
+            @Override
+            protected String convert(Long dateLong) {
+                DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+                try {
+                    return df.format(new Date(dateLong));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                throw new IllegalStateException("failed date conversion. model mapper object");
+            }
+        };
+        modelMapper.createTypeMap(Long.class, String.class);
+        modelMapper.addConverter(toLongDate);
 
         return modelMapper;
     }
