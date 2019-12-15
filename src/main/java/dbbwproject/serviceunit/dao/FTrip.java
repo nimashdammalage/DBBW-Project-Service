@@ -3,7 +3,6 @@ package dbbwproject.serviceunit.dao;
 import dbbwproject.serviceunit.dto.TripStatus;
 import lombok.*;
 
-import java.time.LocalDate;
 
 @Getter
 @Setter

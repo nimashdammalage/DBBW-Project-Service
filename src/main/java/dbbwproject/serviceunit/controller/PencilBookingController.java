@@ -7,6 +7,7 @@ import dbbwproject.serviceunit.dao.FSeason;
 import dbbwproject.serviceunit.dao.FTrip;
 import dbbwproject.serviceunit.dto.*;
 import dbbwproject.serviceunit.dao.FPencilBooking;
+import dbbwproject.serviceunit.settings.Settings;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.modelmapper.ModelMapper;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.ResourceAccessException;
 
 import javax.validation.Valid;
 import java.util.Arrays;
@@ -53,6 +55,7 @@ public class PencilBookingController extends ResourseController {
         ValidateResource.validateDataAvailability(FTrip.class, true, dbRef.child(FTrip.key).child(tripKey), tripNotExist);
         ValidateResource.validateDataAvailability(FPencilBooking.class, false, dbRef.child(FPencilBooking.key).child(key), penBkExist);
         ValidateResource.validateDataComparison(String.class, false, dbRef.child(FTrip.key).child(tripKey).child("tripStatus"), TripStatus.COMPLETED.toString(), completeTRipFound);
+        validateMeeupDateExceed(seasonCode, tripCode, resource.getMeetUpDate());
 
         DatabaseReference dbr = dbRef.child(FPencilBooking.key).child(key);
         return insertDataToDB(fPencilBooking, dbr);
@@ -106,6 +109,7 @@ public class PencilBookingController extends ResourseController {
         ValidateResource.validateDataAvailability(FTrip.class, true, dbRef.child(FTrip.key).child(tripKey), tripNotExist);
         ValidateResource.validateDataAvailability(FPencilBooking.class, true, dbRef.child(FPencilBooking.key).child(key), pbNotExist);
         ValidateResource.validateDataComparison(String.class, false, dbRef.child(FTrip.key).child(tripKey).child("tripStatus"), TripStatus.COMPLETED.toString(), completeTRipFound);
+        validateMeeupDateExceed(seasonCode, tripCode, resource.getMeetUpDate());
 
         DatabaseReference dbr = dbRef.child(FPencilBooking.key).child(key);
         return insertDataToDB(fPencilBooking, dbr);
@@ -120,5 +124,16 @@ public class PencilBookingController extends ResourseController {
         //todo : once bookings created , add a validation for not deleting pencil booking
         DatabaseReference dbr = dbRef.child(FPencilBooking.key).child(key);
         return deleteDataFromDB(dbr);
+    }
+
+    private void validateMeeupDateExceed(String seasonCode, String tripCode, String resourceMeetUpdate) {
+        if (!Settings.getInstance().getData().isMaxPBkCustomersPerDayEnable()) return;
+        ResponseEntity<List<PencilBookingDTO>> pbks = getAllPencilBookingsForTrip(seasonCode, tripCode);
+        if (pbks.getStatusCode() != HttpStatus.OK || pbks.getBody() == null) return;
+
+        long sameMeetupCount = pbks.getBody().stream().filter(pbk -> pbk.getMeetUpDate() == resourceMeetUpdate).count();
+        if (sameMeetupCount >= Settings.getInstance().getData().getMaxPBkCustomersPerDay()) {
+            throw new ResourceAccessException("date :" + resourceMeetUpdate + " is already assigned for " + sameMeetupCount + " customers. please choose another meet up date");
+        }
     }
 }
