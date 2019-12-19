@@ -5,6 +5,7 @@ import com.google.firebase.database.DatabaseReference;
 import dbbwproject.serviceunit.dao.FSettings;
 import dbbwproject.serviceunit.dto.SeasonDTO;
 import dbbwproject.serviceunit.dto.SettingsDTO;
+import dbbwproject.serviceunit.firebasehandler.DBHandle;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.modelmapper.ModelMapper;
@@ -29,7 +30,7 @@ public class SettingController extends ResourseController {
     @ApiOperation(value = "Retrieve all settings", response = ResponseEntity.class)
     @GetMapping("settings")
     public ResponseEntity<SettingsDTO> getSettings() {
-        ResponseEntity<FSettings> result = retrieveData(FSettings.class, dbRef.child(FSettings.key));
+        ResponseEntity<FSettings> result = DBHandle.retrieveData(FSettings.class, dbRef.child(FSettings.key));
         if (result.getStatusCode() != HttpStatus.OK) {
             return new ResponseEntity<>(result.getStatusCode());
         }
@@ -44,6 +45,6 @@ public class SettingController extends ResourseController {
     public ResponseEntity<SeasonDTO> modifySettings(@Valid @RequestBody SettingsDTO resource) {
         FSettings fsettings = modelMapper.map(resource, FSettings.class);
         DatabaseReference dbr = dbRef.child(FSettings.key);
-        return insertDataToDB(fsettings, dbr);
+        return DBHandle.insertDataToDB(fsettings, dbr);
     }
 }

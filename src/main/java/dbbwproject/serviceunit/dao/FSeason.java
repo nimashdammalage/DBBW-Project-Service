@@ -10,6 +10,7 @@ import lombok.*;
 @ToString
 public class FSeason {
     public static final String key = "seasons";
+    public static final String STATUS = "status";
     private String code;
     private SeasonStatus status;
 }

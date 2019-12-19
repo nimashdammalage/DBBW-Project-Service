@@ -7,6 +7,7 @@ import dbbwproject.serviceunit.dao.FSeason;
 import dbbwproject.serviceunit.dao.FTrip;
 import dbbwproject.serviceunit.dto.*;
 import dbbwproject.serviceunit.dao.FPencilBooking;
+import dbbwproject.serviceunit.firebasehandler.DBHandle;
 import dbbwproject.serviceunit.settings.Settings;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -54,18 +55,18 @@ public class PencilBookingController extends ResourseController {
         ValidateResource.validateDataAvailability(FSeason.class, true, dbRef.child(FSeason.key).child(seasonCode), seasonNotExist);
         ValidateResource.validateDataAvailability(FTrip.class, true, dbRef.child(FTrip.key).child(tripKey), tripNotExist);
         ValidateResource.validateDataAvailability(FPencilBooking.class, false, dbRef.child(FPencilBooking.key).child(key), penBkExist);
-        ValidateResource.validateDataComparison(String.class, false, dbRef.child(FTrip.key).child(tripKey).child("tripStatus"), TripStatus.COMPLETED.toString(), completeTRipFound);
+        ValidateResource.validateDataComparison(String.class, false, dbRef.child(FTrip.key).child(tripKey).child(FTrip.TRIP_STATUS), TripStatus.COMPLETED.toString(), completeTRipFound);
         validateMeeupDateExceed(seasonCode, tripCode, resource.getMeetUpDate());
 
         DatabaseReference dbr = dbRef.child(FPencilBooking.key).child(key);
-        return insertDataToDB(fPencilBooking, dbr);
+        return DBHandle.insertDataToDB(fPencilBooking, dbr);
     }
 
     @GetMapping("{seasonCode}/trips/{tripCode}/pencil-bookings/{personName}")
     @ApiOperation(value = "Retrieve pencil booking by person name", response = ResponseEntity.class)
     public ResponseEntity<PencilBookingDTO> getPencilBookingByPersonName(@PathVariable String seasonCode, @PathVariable String tripCode, @PathVariable String personName) {
         String key = seasonCode + "_" + tripCode + "_" + personName;
-        ResponseEntity<FPencilBooking> res = retrieveData(FPencilBooking.class, dbRef.child(FPencilBooking.key).child(key));
+        ResponseEntity<FPencilBooking> res = DBHandle.retrieveData(FPencilBooking.class, dbRef.child(FPencilBooking.key).child(key));
         if (res.getStatusCode() != HttpStatus.OK) {
             return new ResponseEntity<>(res.getStatusCode());
         }
@@ -79,7 +80,7 @@ public class PencilBookingController extends ResourseController {
     @ApiOperation(value = "Retrieve a list of all pencil bookings belong to a trip", response = ResponseEntity.class)
     public ResponseEntity<List<PencilBookingDTO>> getAllPencilBookingsForTrip(@PathVariable String seasonCode, @PathVariable String tripCode) {
         Query query = dbRef.child(FPencilBooking.key).orderByChild("tripSeasonIndex").equalTo(seasonCode + "_" + tripCode);
-        ResponseEntity<List<FPencilBooking>> fPenBks = retrieveDataList(FPencilBooking.class, query);
+        ResponseEntity<List<FPencilBooking>> fPenBks = DBHandle.retrieveDataList(FPencilBooking.class, query);
         if (fPenBks.getStatusCode() != HttpStatus.OK) {
             return new ResponseEntity<>(fPenBks.getStatusCode());
         }
@@ -108,11 +109,11 @@ public class PencilBookingController extends ResourseController {
         ValidateResource.validateDataAvailability(FSeason.class, true, dbRef.child(FSeason.key).child(seasonCode), seasonNotExist);
         ValidateResource.validateDataAvailability(FTrip.class, true, dbRef.child(FTrip.key).child(tripKey), tripNotExist);
         ValidateResource.validateDataAvailability(FPencilBooking.class, true, dbRef.child(FPencilBooking.key).child(key), pbNotExist);
-        ValidateResource.validateDataComparison(String.class, false, dbRef.child(FTrip.key).child(tripKey).child("tripStatus"), TripStatus.COMPLETED.toString(), completeTRipFound);
+        ValidateResource.validateDataComparison(String.class, false, dbRef.child(FTrip.key).child(tripKey).child(FTrip.TRIP_STATUS), TripStatus.COMPLETED.toString(), completeTRipFound);
         validateMeeupDateExceed(seasonCode, tripCode, resource.getMeetUpDate());
 
         DatabaseReference dbr = dbRef.child(FPencilBooking.key).child(key);
-        return insertDataToDB(fPencilBooking, dbr);
+        return DBHandle.insertDataToDB(fPencilBooking, dbr);
     }
 
     @DeleteMapping("{seasonCode}/trips/{tripCode}/pencil-bookings/{personName}")
@@ -123,7 +124,7 @@ public class PencilBookingController extends ResourseController {
         ValidateResource.validateDataAvailability(FPencilBooking.class, true, dbRef.child(FPencilBooking.key).child(key), pbNotExistForDeletion);
         //todo : once bookings created , add a validation for not deleting pencil booking
         DatabaseReference dbr = dbRef.child(FPencilBooking.key).child(key);
-        return deleteDataFromDB(dbr);
+        return DBHandle.deleteDataFromDB(dbr);
     }
 
     private void validateMeeupDateExceed(String seasonCode, String tripCode, String resourceMeetUpdate) {
@@ -131,7 +132,7 @@ public class PencilBookingController extends ResourseController {
         ResponseEntity<List<PencilBookingDTO>> pbks = getAllPencilBookingsForTrip(seasonCode, tripCode);
         if (pbks.getStatusCode() != HttpStatus.OK || pbks.getBody() == null) return;
 
-        long sameMeetupCount = pbks.getBody().stream().filter(pbk -> pbk.getMeetUpDate() == resourceMeetUpdate).count();
+        long sameMeetupCount = pbks.getBody().stream().filter(pbk -> pbk.getMeetUpDate().equals(resourceMeetUpdate)).count();
         if (sameMeetupCount >= Settings.getInstance().getData().getMaxPBkCustomersPerDay()) {
             throw new ResourceAccessException("date :" + resourceMeetUpdate + " is already assigned for " + sameMeetupCount + " customers. please choose another meet up date");
         }

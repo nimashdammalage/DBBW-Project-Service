@@ -6,6 +6,7 @@ import dbbwproject.serviceunit.dao.FTrip;
 import dbbwproject.serviceunit.dto.SeasonDTO;
 import dbbwproject.serviceunit.dto.SeasonStatus;
 import dbbwproject.serviceunit.dao.FSeason;
+import dbbwproject.serviceunit.firebasehandler.DBHandle;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.modelmapper.ModelMapper;
@@ -38,7 +39,7 @@ public class SeasonController extends ResourseController {
     @ApiOperation(value = "Retrieve a list of all seasons", response = ResponseEntity.class)
     @GetMapping("seasons")
     public ResponseEntity<List<SeasonDTO>> getAllSeasons() {
-        ResponseEntity<List<FSeason>> fSeasons = retrieveDataList(FSeason.class, dbRef.child(FSeason.key));
+        ResponseEntity<List<FSeason>> fSeasons = DBHandle.retrieveDataList(FSeason.class, dbRef.child(FSeason.key));
         if (fSeasons.getStatusCode() != HttpStatus.OK) {
             return new ResponseEntity<>(fSeasons.getStatusCode());
         }
@@ -54,7 +55,7 @@ public class SeasonController extends ResourseController {
     @ApiOperation(value = "Retrieve season by code", response = ResponseEntity.class)
     @GetMapping("seasons/{code}")
     public ResponseEntity<SeasonDTO> getSeasonByCode(@PathVariable String code) {
-        ResponseEntity<FSeason> res = retrieveData(FSeason.class, dbRef.child(FSeason.key).child(code));
+        ResponseEntity<FSeason> res = DBHandle.retrieveData(FSeason.class, dbRef.child(FSeason.key).child(code));
         if (res.getStatusCode() != HttpStatus.OK) {
             return new ResponseEntity<>(res.getStatusCode());
         }
@@ -73,10 +74,10 @@ public class SeasonController extends ResourseController {
         String duplicateCurrentSeason = "two seasons can not be in current state";
         ValidateResource.validateArgument(!code.equals(resource.getCode()), "season's code: " + resource.getCode() + " and code in url: " + code + " does not match");
         ValidateResource.validateDataAvailability(FSeason.class, true, dbRef.child(FSeason.key).child(key), seasonNotExist);
-        ValidateResource.validateDataAvailability(resource.getStatus() == SeasonStatus.CURRENT, FSeason.class, false, dbRef.child(FSeason.key).orderByChild("status").equalTo(SeasonStatus.CURRENT.toString()), duplicateCurrentSeason);
+        ValidateResource.validateDataAvailability(resource.getStatus() == SeasonStatus.CURRENT, FSeason.class, false, dbRef.child(FSeason.key).orderByChild(FSeason.STATUS).equalTo(SeasonStatus.CURRENT.toString()), duplicateCurrentSeason);
 
         DatabaseReference dbr = dbRef.child(FSeason.key).child(key);
-        return insertDataToDB(fseason, dbr);
+        return DBHandle.insertDataToDB(fseason, dbr);
     }
 
     @ApiOperation(value = "Create a season ", response = ResponseEntity.class)
@@ -87,10 +88,10 @@ public class SeasonController extends ResourseController {
         String seasonExist = "season with code: " + resource.getCode() + " already exists in database";
         String duplicateCurrentSeason = "two seasons can not be in current state";
         ValidateResource.validateDataAvailability(FSeason.class, false, dbRef.child(FSeason.key).child(key), seasonExist);
-        ValidateResource.validateDataAvailability(resource.getStatus() == SeasonStatus.CURRENT, FSeason.class, false, dbRef.child(FSeason.key).orderByChild("status").equalTo(SeasonStatus.CURRENT.toString()), duplicateCurrentSeason);
+        ValidateResource.validateDataAvailability(resource.getStatus() == SeasonStatus.CURRENT, FSeason.class, false, dbRef.child(FSeason.key).orderByChild(FSeason.STATUS).equalTo(SeasonStatus.CURRENT.toString()), duplicateCurrentSeason);
 
         DatabaseReference dbr = dbRef.child(FSeason.key).child(key);
-        return insertDataToDB(fseason, dbr);
+        return DBHandle.insertDataToDB(fseason, dbr);
     }
 
     @ApiOperation(value = "Delete a season ", response = ResponseEntity.class)
@@ -100,9 +101,9 @@ public class SeasonController extends ResourseController {
         String seasonNotExistForDelete = "season with code: " + code + " does not exist in database for deletion";
         String linkedTripExists = "trips with season code: " + code + " found. season can not be deleted";
         ValidateResource.validateDataAvailability(FSeason.class, true, dbRef.child(FSeason.key).child(key), seasonNotExistForDelete);
-        ValidateResource.validateDataAvailability(FTrip.class, false, dbRef.child(FTrip.key).orderByChild("seasonCode").equalTo(code), linkedTripExists);
+        ValidateResource.validateDataAvailability(FTrip.class, false, dbRef.child(FTrip.key).orderByChild(FTrip.SEASON_CODE).equalTo(code), linkedTripExists);
 
         DatabaseReference dbr = dbRef.child(FSeason.key).child(code);
-        return deleteDataFromDB(dbr);
+        return DBHandle.deleteDataFromDB(dbr);
     }
 }

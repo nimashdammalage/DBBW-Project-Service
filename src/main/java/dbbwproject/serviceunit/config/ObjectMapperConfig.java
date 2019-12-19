@@ -15,6 +15,8 @@ import java.text.SimpleDateFormat;
 
 @Configuration
 public class ObjectMapperConfig {
+    static final String YYYY_MM_DD = "yyyy-MM-dd";
+
     @Bean
     public ModelMapper createModelMapper() {
         ModelMapper modelMapper = new ModelMapper();
@@ -35,7 +37,7 @@ public class ObjectMapperConfig {
         Converter<String, Long> toStringDate = new AbstractConverter<String, Long>() {
             @Override
             protected Long convert(String source) {
-                DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+                DateFormat df = new SimpleDateFormat(YYYY_MM_DD);
                 try {
                     return df.parse(source).getTime();
                 } catch (ParseException e) {
@@ -50,7 +52,7 @@ public class ObjectMapperConfig {
         Converter<Long, String> toLongDate = new AbstractConverter<Long, String>() {
             @Override
             protected String convert(Long dateLong) {
-                DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+                DateFormat df = new SimpleDateFormat(YYYY_MM_DD);
                 try {
                     return df.format(new Date(dateLong));
                 } catch (Exception e) {

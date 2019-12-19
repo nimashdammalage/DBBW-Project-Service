@@ -11,7 +11,8 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @ToString
 public class FPencilBooking {
-    public static final String key = "pencil-booking";
+    public static final String key = "pencil-bookings";
+    public static final String TRIP_SEASON_INDEX = "tripSeasonIndex";
     private String seasonCode;
     private String tripCode;
     private String personName;

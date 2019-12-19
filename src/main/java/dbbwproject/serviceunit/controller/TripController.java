@@ -9,6 +9,7 @@ import dbbwproject.serviceunit.dto.SeasonStatus;
 import dbbwproject.serviceunit.dto.TripDTO;
 import dbbwproject.serviceunit.dto.TripStatus;
 import dbbwproject.serviceunit.dao.FTrip;
+import dbbwproject.serviceunit.firebasehandler.DBHandle;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.modelmapper.ModelMapper;
@@ -51,7 +52,7 @@ public class TripController extends ResourseController {
         ValidateResource.validateDataAvailability(FTrip.class, true, dbRef.child(FTrip.key).child(key), tripNotExist);
 
         Query query = dbRef.child(FPencilBooking.key).orderByChild("tripSeasonIndex").equalTo(key);
-        ResponseEntity<List<FPencilBooking>> result = retrieveDataList(FPencilBooking.class, query);
+        ResponseEntity<List<FPencilBooking>> result = DBHandle.retrieveDataList(FPencilBooking.class, query);
         if (result.getStatusCode() != HttpStatus.OK) {
             return new ResponseEntity<>(result.getStatusCode());
         }
@@ -70,7 +71,7 @@ public class TripController extends ResourseController {
     @ApiOperation(value = "Retrieve a list of all trips belong to a season", response = ResponseEntity.class)
     public ResponseEntity<List<TripDTO>> getAllTripsForSeason(@PathVariable String seasonCode) {
         Query query = dbRef.child(FTrip.key).orderByChild("seasonCode").equalTo(seasonCode);
-        ResponseEntity<List<FTrip>> fseasons = retrieveDataList(FTrip.class, query);
+        ResponseEntity<List<FTrip>> fseasons = DBHandle.retrieveDataList(FTrip.class, query);
         if (fseasons.getStatusCode() != HttpStatus.OK) {
             return new ResponseEntity<>(fseasons.getStatusCode());
         }
@@ -87,7 +88,7 @@ public class TripController extends ResourseController {
     @ApiOperation(value = "Retrieve trip by code", response = ResponseEntity.class)
     public ResponseEntity<TripDTO> getTripByCode(@PathVariable String seasonCode, @PathVariable String tripCode) {
         String key = seasonCode + "_" + tripCode;
-        ResponseEntity<FTrip> res = retrieveData(FTrip.class, dbRef.child(FTrip.key).child(key));
+        ResponseEntity<FTrip> res = DBHandle.retrieveData(FTrip.class, dbRef.child(FTrip.key).child(key));
         if (res.getStatusCode() != HttpStatus.OK) {
             return new ResponseEntity<>(res.getStatusCode());
         }
@@ -109,10 +110,10 @@ public class TripController extends ResourseController {
         ValidateResource.validateArgument(!seasonCode.equals(resource.getSeasonCode()), "season code: " + resource.getSeasonCode() + " and code in url: " + seasonCode + " does not match");
         ValidateResource.validateDataAvailability(FSeason.class, true, dbRef.child(FSeason.key).child(seasonCode), seasonNotExist);
         ValidateResource.validateDataAvailability(FTrip.class, true, dbRef.child(FTrip.key).child(key), tripNotExist);
-        ValidateResource.validateDataAvailability(FSeason.class, false, dbRef.child(FSeason.key).child(seasonCode).orderByChild("status").equalTo(SeasonStatus.COMPLETED.toString()), completedSeasonFound);
+        ValidateResource.validateDataAvailability(FSeason.class, false, dbRef.child(FSeason.key).child(seasonCode).orderByChild(FSeason.STATUS).equalTo(SeasonStatus.COMPLETED.toString()), completedSeasonFound);
 
         DatabaseReference dbr = dbRef.child(FTrip.key).child(key);
-        return insertDataToDB(fTrip, dbr);
+        return DBHandle.insertDataToDB(fTrip, dbr);
     }
 
     @PostMapping("{seasonCode}/trips")
@@ -130,7 +131,7 @@ public class TripController extends ResourseController {
         ValidateResource.validateDataComparison(String.class, false, dbRef.child(FSeason.key).child(seasonCode).child("status"), SeasonStatus.COMPLETED.toString(), completedSeasonFound);
 
         DatabaseReference dbr = dbRef.child(FTrip.key).child(key);
-        return insertDataToDB(fTrip, dbr);
+        return DBHandle.insertDataToDB(fTrip, dbr);
     }
 
     @DeleteMapping("{seasonCode}/trips/{tripCode}")
@@ -140,10 +141,10 @@ public class TripController extends ResourseController {
         String tripNotExistForDeletion = "trip with code: " + tripCode + " and season code: " + seasonCode + " does not exist in database for deletion";
         String linkedPenBookingExists = "pencil bookings with trip code: " + tripCode + " and season code: " + seasonCode + " found. season can not be deleted";
         ValidateResource.validateDataAvailability(FTrip.class, true, dbRef.child(FTrip.key).child(key), tripNotExistForDeletion);
-        ValidateResource.validateDataAvailability(FPencilBooking.class, false, dbRef.child(FPencilBooking.key).orderByChild("tripSeasonIndex").equalTo(key), linkedPenBookingExists);
+        ValidateResource.validateDataAvailability(FPencilBooking.class, false, dbRef.child(FPencilBooking.key).orderByChild(FPencilBooking.TRIP_SEASON_INDEX).equalTo(key), linkedPenBookingExists);
 
         DatabaseReference dbr = dbRef.child(FTrip.key).child(key);
-        return deleteDataFromDB(dbr);
+        return DBHandle.deleteDataFromDB(dbr);
     }
 
 }
