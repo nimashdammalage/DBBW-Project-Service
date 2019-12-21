@@ -25,7 +25,7 @@ public class TripDTO {
     private String seasonCode;
 
     @Positive(message = "Total cost per one person must be greater than zero")
-    @ApiModelProperty(notes = "Total cost per one person for the trip in Rupees")
+    @ApiModelProperty(notes = "Total cost per one person for the trip in Rupees",example = "200")
     private int perPersonCost;
 
     @ApiModelProperty(notes = "Trip start date / flight departure Date in YYYY-MM-DD format", example = "2018-02-26")

@@ -69,8 +69,14 @@ public class TripController extends ResourseController {
 
     @GetMapping("{seasonCode}/trips")
     @ApiOperation(value = "Retrieve a list of all trips belong to a season", response = ResponseEntity.class)
-    public ResponseEntity<List<TripDTO>> getAllTripsForSeason(@PathVariable String seasonCode) {
-        Query query = dbRef.child(FTrip.key).orderByChild("seasonCode").equalTo(seasonCode);
+    public ResponseEntity<List<TripDTO>> getAllTripsForSeason(@PathVariable String seasonCode, @RequestParam(name = "lastTripCode", required = false, defaultValue = "") String lastTripCode, @RequestParam("size") int size) {
+        Query query;
+        if (lastTripCode == null || lastTripCode.isEmpty()) {
+            query = dbRef.child(FTrip.key).orderByChild("seasonCode").equalTo(seasonCode).limitToFirst(size);
+        } else {
+            String lastTripKey = seasonCode + "_" + lastTripCode;
+            query = dbRef.child(FTrip.key).orderByKey().startAt(lastTripKey).endAt(seasonCode + "\uf8ff").limitToFirst(size);
+        }
         ResponseEntity<List<FTrip>> fseasons = DBHandle.retrieveDataList(FTrip.class, query);
         if (fseasons.getStatusCode() != HttpStatus.OK) {
             return new ResponseEntity<>(fseasons.getStatusCode());

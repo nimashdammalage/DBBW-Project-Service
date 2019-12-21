@@ -78,8 +78,14 @@ public class PencilBookingController extends ResourseController {
 
     @GetMapping("{seasonCode}/trips/{tripCode}/pencil-bookings")
     @ApiOperation(value = "Retrieve a list of all pencil bookings belong to a trip", response = ResponseEntity.class)
-    public ResponseEntity<List<PencilBookingDTO>> getAllPencilBookingsForTrip(@PathVariable String seasonCode, @PathVariable String tripCode) {
-        Query query = dbRef.child(FPencilBooking.key).orderByChild("tripSeasonIndex").equalTo(seasonCode + "_" + tripCode);
+    public ResponseEntity<List<PencilBookingDTO>> getAllPencilBookingsForTrip(@PathVariable String seasonCode, @PathVariable String tripCode, @RequestParam(name = "lastPersonName", required = false, defaultValue = "") String lastPersonName, @RequestParam("size") int size) {
+        Query query;
+        if (lastPersonName == null || lastPersonName.isEmpty()) {
+            query = dbRef.child(FPencilBooking.key).orderByChild(FPencilBooking.TRIP_SEASON_INDEX).equalTo(seasonCode + "_" + tripCode).limitToFirst(size);
+        } else {
+            String lastPPKey = seasonCode + "_" + tripCode + "_" + lastPersonName;
+            query = dbRef.child(FPencilBooking.key).orderByKey().startAt(lastPPKey).endAt(seasonCode + "_" + tripCode + "\uf8ff").limitToFirst(size);
+        }
         ResponseEntity<List<FPencilBooking>> fPenBks = DBHandle.retrieveDataList(FPencilBooking.class, query);
         if (fPenBks.getStatusCode() != HttpStatus.OK) {
             return new ResponseEntity<>(fPenBks.getStatusCode());
@@ -129,10 +135,14 @@ public class PencilBookingController extends ResourseController {
 
     private void validateMeeupDateExceed(String seasonCode, String tripCode, String resourceMeetUpdate) {
         if (!Settings.getInstance().getData().isMaxPBkCustomersPerDayEnable()) return;
-        ResponseEntity<List<PencilBookingDTO>> pbks = getAllPencilBookingsForTrip(seasonCode, tripCode);
-        if (pbks.getStatusCode() != HttpStatus.OK || pbks.getBody() == null) return;
+        Query query = dbRef.child(FPencilBooking.key).orderByChild(FPencilBooking.TRIP_SEASON_INDEX).equalTo(seasonCode + "_" + tripCode);
+        ResponseEntity<List<FPencilBooking>> pbks = DBHandle.retrieveDataList(FPencilBooking.class, query);
+        if (pbks.getStatusCode() != HttpStatus.OK || pbks.getBody() == null || pbks.getBody().isEmpty()) return;
+        java.lang.reflect.Type penBookingDTOListType = new TypeToken<List<PencilBookingDTO>>() {
+        }.getType();
+        List<PencilBookingDTO> mapDTO = modelMapper.map(pbks.getBody(), penBookingDTOListType);
 
-        long sameMeetupCount = pbks.getBody().stream().filter(pbk -> pbk.getMeetUpDate().equals(resourceMeetUpdate)).count();
+        long sameMeetupCount = mapDTO.stream().filter(pbk -> pbk.getMeetUpDate().equals(resourceMeetUpdate)).count();
         if (sameMeetupCount >= Settings.getInstance().getData().getMaxPBkCustomersPerDay()) {
             throw new ResourceAccessException("date :" + resourceMeetUpdate + " is already assigned for " + sameMeetupCount + " customers. please choose another meet up date");
         }

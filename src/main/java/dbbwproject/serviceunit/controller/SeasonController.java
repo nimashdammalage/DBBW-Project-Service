@@ -2,6 +2,7 @@ package dbbwproject.serviceunit.controller;
 
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.Query;
 import dbbwproject.serviceunit.dao.FTrip;
 import dbbwproject.serviceunit.dto.SeasonDTO;
 import dbbwproject.serviceunit.dto.SeasonStatus;
@@ -38,8 +39,14 @@ public class SeasonController extends ResourseController {
 
     @ApiOperation(value = "Retrieve a list of all seasons", response = ResponseEntity.class)
     @GetMapping("seasons")
-    public ResponseEntity<List<SeasonDTO>> getAllSeasons() {
-        ResponseEntity<List<FSeason>> fSeasons = DBHandle.retrieveDataList(FSeason.class, dbRef.child(FSeason.key));
+    public ResponseEntity<List<SeasonDTO>> getAllSeasons(@RequestParam(name = "lastSeasonCode", required = false, defaultValue = "") String lastSeasonCode, @RequestParam("size") int size) {
+        Query query;
+        if (lastSeasonCode == null || lastSeasonCode.isEmpty()) {
+            query = dbRef.child(FSeason.key).orderByKey().limitToFirst(size);
+        } else {
+            query = dbRef.child(FSeason.key).orderByKey().startAt(lastSeasonCode).limitToFirst(size);
+        }
+        ResponseEntity<List<FSeason>> fSeasons = DBHandle.retrieveDataList(FSeason.class, query);
         if (fSeasons.getStatusCode() != HttpStatus.OK) {
             return new ResponseEntity<>(fSeasons.getStatusCode());
         }
