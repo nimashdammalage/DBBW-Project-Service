@@ -33,7 +33,7 @@ public class PBReader implements ItemReader<FPencilBooking> {
     }
 
     private List<FPencilBooking> getList() {
-        Query workingTripsQuery = dbRef.child(FTrip.key).orderByChild("tripStatus").equalTo(TripStatus.WORKING.toString());
+        Query workingTripsQuery = dbRef.child(FTrip.key).orderByChild(FTrip.TRIP_STATUS).equalTo(TripStatus.WORKING.toString());
         ResponseEntity<List<FTrip>> workingTrips = DBHandle.retrieveDataList(FTrip.class, workingTripsQuery);
 
         List<FPencilBooking> resultPBList = new ArrayList<>();
@@ -43,10 +43,10 @@ public class PBReader implements ItemReader<FPencilBooking> {
 
         for (FTrip fTrip : workingTrips.getBody()) {
             String key = fTrip.getSeasonCode() + "_" + fTrip.getCode();
-            Query pbQuery = dbRef.child(FPencilBooking.key).orderByChild("tripSeasonIndex").equalTo(key);
-            ResponseEntity<List<FPencilBooking>> pbookings = DBHandle.retrieveDataList(FPencilBooking.class, pbQuery);
-            if (pbookings.getBody() != null && !pbookings.getBody().isEmpty()) {
-                resultPBList.addAll(pbookings.getBody());
+            Query pbQuery = dbRef.child(FPencilBooking.key).orderByChild(FPencilBooking.TRIP_SEASON_INDEX).equalTo(key);
+            ResponseEntity<List<FPencilBooking>> pBookings = DBHandle.retrieveDataList(FPencilBooking.class, pbQuery);
+            if (pBookings.getBody() != null && !pBookings.getBody().isEmpty()) {
+                resultPBList.addAll(pBookings.getBody());
             }
         }
         return resultPBList;

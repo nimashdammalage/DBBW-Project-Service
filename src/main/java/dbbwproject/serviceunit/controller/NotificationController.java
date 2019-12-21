@@ -32,12 +32,13 @@ public class NotificationController extends ResourseController {
 
     @ApiOperation(value = "Retrieve a list of all notifications", response = ResponseEntity.class)
     @GetMapping("notifications")
-    public ResponseEntity<List<NotificationDTO>> getAllNotifications(@RequestParam("unreadOnly") boolean unreadOnly) {
+    public ResponseEntity<List<NotificationDTO>> getAllNotifications(@RequestParam(name = "lastCreatedDate", required = false) String lastCreatedDate, @RequestParam("size") int size) {
         ResponseEntity<List<FNotification>> fNotifications;
-        if (unreadOnly) {
-            fNotifications = DBHandle.retrieveDataList(FNotification.class, dbRef.child(FNotification.key).orderByChild("read").equalTo(false));
+        if (lastCreatedDate == null || lastCreatedDate.isEmpty()) {
+            fNotifications = DBHandle.retrieveDataList(FNotification.class, dbRef.child(FNotification.key).orderByChild(FNotification.CREATED_DATE).limitToLast(size));
         } else {
-            fNotifications = DBHandle.retrieveDataList(FNotification.class, dbRef.child(FNotification.key));
+            long lastDateAsLong = modelMapper.map(lastCreatedDate, Long.class);
+            fNotifications = DBHandle.retrieveDataList(FNotification.class, dbRef.child(FNotification.key).orderByChild(FNotification.CREATED_DATE).endAt(lastDateAsLong).limitToLast(size));
         }
         if (fNotifications.getStatusCode() != HttpStatus.OK) {
             return new ResponseEntity<>(fNotifications.getStatusCode());

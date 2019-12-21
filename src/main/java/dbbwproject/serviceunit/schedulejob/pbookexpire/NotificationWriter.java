@@ -36,7 +36,7 @@ public class NotificationWriter implements ItemWriter<FPencilBooking> {
         for (int j = 0; j < fPencilBookings.size(); j++) {
             FPencilBooking fPencilBooking = fPencilBookings.get(j);
             PencilBookingDTO mappedDTO = modelMapper.map(fPencilBooking, PencilBookingDTO.class);
-            String notId = jobCode + "_" + j;
+            String notId = jobCode + "_" + mappedDTO.getSeasonCode() + "_" + mappedDTO.getTripCode() + "_" + mappedDTO.getPersonName() + j;
             String message = "Person: " + fPencilBooking.getPersonName() + " from trip: " + fPencilBooking.getTripCode() + " and season: " + fPencilBooking.getSeasonCode()
                     + " has not come to office before meet up date: " + mappedDTO.getMeetUpDate() + " .his TP no: " + mappedDTO.getTpNo();
             FNotification fnotification = new FNotification(notId, new Date().getTime(), message, false);

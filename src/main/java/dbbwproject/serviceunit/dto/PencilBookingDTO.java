@@ -46,7 +46,7 @@ public class PencilBookingDTO {
     private String registrationNumbers;
 
     @NotBlank
-    @ApiModelProperty(notes = "Date which the customer of pencil booking should come to Mahamega office with documents for first meet up.", example = "2020-01-18", required = true)
+    @ApiModelProperty(notes = "Date which the customer of pencil booking should come to Mahamega office with documents for first meet up in yyyy-MM-dd'T'HH:mm:ss.SSS format.", example = "2019-12-21T13:10:26.641", required = true)
     private String meetUpDate;
 
     @ApiModelProperty(notes = "Status whether the customer of pencil booking arrived for first meet up (on or before meetup date).", example = "CUSTOMER_NOT_ARRIVED")

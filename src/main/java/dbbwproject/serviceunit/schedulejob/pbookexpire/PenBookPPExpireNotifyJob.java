@@ -11,7 +11,6 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
-import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,6 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Configuration
 @EnableScheduling
 public class PenBookPPExpireNotifyJob {
+    private static final String JOB_NAME = "PenBookPPExpireNotifyJob";
     private AtomicBoolean enabled = new AtomicBoolean(true);
     private final ModelMapper modelMapper;
     private final JobBuilderFactory jobBuilders;
@@ -39,9 +39,9 @@ public class PenBookPPExpireNotifyJob {
     }
 
     //1000*60*60*24=8 640 0000
-    @Scheduled(fixedRate = 100000)
+    @Scheduled(fixedRate = 86400000)
     public void run() throws Exception {
-        String jobCode = "PenBookPPExpireNotifyJob_" + new Date().getTime();
+        String jobCode = JOB_NAME + "_" + new Date().getTime();
         if (!enabled.get()) {
             return;
         }
@@ -49,6 +49,7 @@ public class PenBookPPExpireNotifyJob {
                 new JobParametersBuilder()
                         .addDate("launchDate", new Date())
                         .addString("jobCode", jobCode)
+                        .addString("jobName", JOB_NAME)
                         .toJobParameters());
     }
 
@@ -68,20 +69,16 @@ public class PenBookPPExpireNotifyJob {
     }
 
     @Bean
+    @StepScope
     public Tasklet tasklet() {
         //task tht run repeatedly until meets RepeatStatus.FINISHED; or exception occures
-        Tasklet tasklet = (contribution, chunkContext) -> {
-            System.out.println("Starting Pencil Booking Expire date inspection job");
-            System.out.println("time: " + new Date());
-            return RepeatStatus.FINISHED;
-        };
-        return tasklet;
+        return new CleanupTasklet();
     }
 
     @Bean
     public Step chunkStep() {
         return stepBuilders.get("chunkStep")
-                .<FPencilBooking, FPencilBooking>chunk(2)
+                .<FPencilBooking, FPencilBooking>chunk(100)
                 .reader(reader())
                 .processor(processor())
                 .writer(writer())

@@ -28,10 +28,10 @@ public class TripDTO {
     @ApiModelProperty(notes = "Total cost per one person for the trip in Rupees",example = "200")
     private int perPersonCost;
 
-    @ApiModelProperty(notes = "Trip start date / flight departure Date in YYYY-MM-DD format", example = "2018-02-26")
+    @ApiModelProperty(notes = "Trip start date / flight departure Date in yyyy-MM-dd'T'HH:mm:ss.SSS format", example = "2019-12-21T13:10:26.641")
     private String startDate;
 
-    @ApiModelProperty(notes = "Trip end date / flight arrivel Date in YYYY-MM-DD format", example = "2018-02-26")
+    @ApiModelProperty(notes = "Trip end date / flight arrival Date in yyyy-MM-dd'T'HH:mm:ss.SSS format", example = "2019-12-21T13:10:26.641")
     private String endDate;
 
     @ApiModelProperty(notes = "Date which all passports should be handover to Mahamega office on or before, by customers who participated to trip in YYYY-MM-DD format", example = "2018-02-26")

@@ -51,7 +51,7 @@ public class TripController extends ResourseController {
         ValidateResource.validateDataAvailability(FSeason.class, true, dbRef.child(FSeason.key).child(seasonCode), seasonNotExist);
         ValidateResource.validateDataAvailability(FTrip.class, true, dbRef.child(FTrip.key).child(key), tripNotExist);
 
-        Query query = dbRef.child(FPencilBooking.key).orderByChild("tripSeasonIndex").equalTo(key);
+        Query query = dbRef.child(FPencilBooking.key).orderByChild(FPencilBooking.TRIP_SEASON_INDEX).equalTo(key);
         ResponseEntity<List<FPencilBooking>> result = DBHandle.retrieveDataList(FPencilBooking.class, query);
         if (result.getStatusCode() != HttpStatus.OK) {
             return new ResponseEntity<>(result.getStatusCode());
