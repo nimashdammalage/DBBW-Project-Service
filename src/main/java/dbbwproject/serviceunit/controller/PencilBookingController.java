@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 //@CrossOrigin(origins = "http://localhost:4200")
 @RestController
@@ -27,8 +29,10 @@ public class PencilBookingController {
 
     @GetMapping("/trips/pencil-booking-status")
     @ApiOperation(value = "Retrieve a list of all pencil booking status", response = ResponseEntity.class)
-    public ResponseEntity<List<PencilBookingStatus>> getAllPencilBookingStatus() {
-        return new ResponseEntity<>(Arrays.asList(PencilBookingStatus.values()), HttpStatus.OK);
+    public ResponseEntity<Map<PencilBookingStatus, PencilBookingStatus>> getAllPencilBookingStatus() {
+        Map<PencilBookingStatus, PencilBookingStatus> map = new HashMap<>();
+        Arrays.stream(PencilBookingStatus.values()).forEach(p -> map.put(p, p));
+        return new ResponseEntity<>(map, HttpStatus.OK);
     }
 
     @PostMapping("{seasonCode}/trips/{tripCode}/pencil-bookings")
@@ -47,6 +51,19 @@ public class PencilBookingController {
     @ApiOperation(value = "Retrieve a list of all pencil bookings belong to a trip", response = ResponseEntity.class)
     public ResponseEntity<List<PencilBookingDTO>> getAllPencilBookingsForTrip(@PathVariable String seasonCode, @PathVariable String tripCode, @RequestParam(name = "lastPersonName", required = false, defaultValue = "") String lastPersonName, @RequestParam("size") int size) {
         return pencilBookingService.getAllPencilBookingsForTrip(seasonCode, tripCode, lastPersonName, size);
+    }
+
+    @GetMapping("{seasonCode}/trips/{tripCode}/pencil-booking-code")
+    @ApiOperation(value = "Retrieve a list of all pencil booking codes belong to a trip", response = ResponseEntity.class)
+    public ResponseEntity<Map<String, String>> getAllPencilBookingCodesForTrip(@PathVariable String seasonCode, @PathVariable String tripCode, @RequestParam(name = "lastPersonName", required = false, defaultValue = "") String lastPersonName, @RequestParam("size") int size) {
+        Map<String, String> map = new HashMap<>();
+        ResponseEntity<List<PencilBookingDTO>> result = pencilBookingService.getAllPencilBookingsForTrip(seasonCode, tripCode, lastPersonName, size);
+        if (result.getStatusCode() != HttpStatus.OK) {
+            return new ResponseEntity<>(result.getStatusCode());
+        }
+        result.getBody().stream().forEach(p -> map.put(p.getPersonName(), p.getPersonName()));
+        return new ResponseEntity<>(map, HttpStatus.OK);
+
     }
 
     @PutMapping("{seasonCode}/trips/{tripCode}/pencil-bookings/{personName}")

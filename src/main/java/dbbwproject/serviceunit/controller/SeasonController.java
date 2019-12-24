@@ -27,8 +27,10 @@ public class SeasonController {
 
     @ApiOperation(value = "Retrieve a list of all season status", response = ResponseEntity.class)
     @GetMapping("seasons/season-status")
-    public ResponseEntity<List<SeasonStatus>> getAllSeasonStatus() {
-        return new ResponseEntity<>(Arrays.asList(SeasonStatus.values()), HttpStatus.OK);
+    public ResponseEntity<Map<SeasonStatus, SeasonStatus>> getAllSeasonStatus() {
+        Map<SeasonStatus, SeasonStatus> resMap = new HashMap<>();
+        Arrays.stream(SeasonStatus.values()).forEach(t -> resMap.put(t, t));
+        return new ResponseEntity<>(resMap, HttpStatus.OK);
     }
 
     @ApiOperation(value = "Retrieve a list of all seasons", response = ResponseEntity.class)

@@ -12,7 +12,9 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 //@CrossOrigin(origins = "http://localhost:4200")
 @RestController
@@ -28,8 +30,10 @@ public class TripController {
 
     @ApiOperation(value = "Retrieve a list of all trip status", response = ResponseEntity.class)
     @GetMapping("trips/trip-status")
-    public ResponseEntity<List<TripStatus>> getAllTripStatus() {
-        return new ResponseEntity<>(Arrays.asList(TripStatus.values()), HttpStatus.OK);
+    public ResponseEntity<Map<TripStatus, TripStatus>> getAllTripStatus() {
+        Map<TripStatus, TripStatus> resMap = new HashMap<>();
+        Arrays.stream(TripStatus.values()).forEach(t -> resMap.put(t, t));
+        return new ResponseEntity<>(resMap, HttpStatus.OK);
     }
 
     @GetMapping("{seasonCode}/trips/{tripCode}/booked-seat-numbers")
@@ -42,6 +46,18 @@ public class TripController {
     @ApiOperation(value = "Retrieve a list of all trips belong to a season", response = ResponseEntity.class)
     public ResponseEntity<List<TripDTO>> getAllTripsForSeason(@PathVariable String seasonCode, @RequestParam(name = "lastTripCode", required = false, defaultValue = "") String lastTripCode, @RequestParam("size") int size) {
         return tripService.getAllTripsForSeason(seasonCode, lastTripCode, size);
+    }
+
+    @GetMapping("{seasonCode}/trip-code")
+    @ApiOperation(value = "Retrieve a list of all trips belong to a season", response = ResponseEntity.class)
+    public ResponseEntity<Map<String, String>> getAllTripCodesForSeason(@PathVariable String seasonCode, @RequestParam(name = "lastTripCode", required = false, defaultValue = "") String lastTripCode, @RequestParam("size") int size) {
+        ResponseEntity<List<TripDTO>> result = tripService.getAllTripsForSeason(seasonCode, lastTripCode, size);
+        if (result.getStatusCode() != HttpStatus.OK) {
+            return new ResponseEntity<>(result.getStatusCode());
+        }
+        Map<String, String> map = new HashMap<>();
+        result.getBody().stream().forEach(s -> map.put(s.getCode(), s.getCode()));
+        return new ResponseEntity<>(map, HttpStatus.OK);
     }
 
     @GetMapping("{seasonCode}/trips/{tripCode}")
