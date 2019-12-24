@@ -4,7 +4,6 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.*;
 
 import javax.validation.constraints.*;
-import java.util.Date;
 
 @Getter
 @Setter
@@ -28,13 +27,22 @@ public class TripDTO {
     @ApiModelProperty(notes = "Total cost per one person for the trip in Rupees",example = "200")
     private int perPersonCost;
 
+    @NotBlank
+    @Pattern(regexp = "^(\\d{4})\\D?(0[1-9]|1[0-2])\\D?([12]\\d|0[1-9]|3[01])(\\D?([01]\\d|2[0-3])\\D?([0-5]\\d)\\D?([0-5]\\d)?\\D?(\\d{3})?)?$"
+            , message = "Trip start date / flight departure Date should be  in yyyy-MM-dd'T'HH:mm:ss.SSS format")
     @ApiModelProperty(notes = "Trip start date / flight departure Date in yyyy-MM-dd'T'HH:mm:ss.SSS format", example = "2019-12-21T13:10:26.641")
     private String startDate;
 
+    @NotBlank
+    @Pattern(regexp = "^(\\d{4})\\D?(0[1-9]|1[0-2])\\D?([12]\\d|0[1-9]|3[01])(\\D?([01]\\d|2[0-3])\\D?([0-5]\\d)\\D?([0-5]\\d)?\\D?(\\d{3})?)?$"
+            , message = "Trip end date / flight arrival Date should be  in yyyy-MM-dd'T'HH:mm:ss.SSS format")
     @ApiModelProperty(notes = "Trip end date / flight arrival Date in yyyy-MM-dd'T'HH:mm:ss.SSS format", example = "2019-12-21T13:10:26.641")
     private String endDate;
 
-    @ApiModelProperty(notes = "Date which all passports should be handover to Mahamega office on or before, by customers who participated to trip in YYYY-MM-DD format", example = "2018-02-26")
+    @NotBlank
+    @Pattern(regexp = "^(\\d{4})\\D?(0[1-9]|1[0-2])\\D?([12]\\d|0[1-9]|3[01])(\\D?([01]\\d|2[0-3])\\D?([0-5]\\d)\\D?([0-5]\\d)?\\D?(\\d{3})?)?$"
+            , message = "Passport Collection Date should be  in yyyy-MM-dd'T'HH:mm:ss.SSS format")
+    @ApiModelProperty(notes = "Date which all passports should be handover to Mahamega office on or before, by customers who participated to trip in yyyy-MM-dd'T'HH:mm:ss.SSS format", example = "2019-12-21T13:10:26.641")
     private String ppColDate;
 
     @Positive(message = "Total cost per one person must be greater than zero")

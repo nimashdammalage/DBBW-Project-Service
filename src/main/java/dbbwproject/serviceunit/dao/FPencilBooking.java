@@ -12,7 +12,7 @@ import java.time.LocalDate;
 @ToString
 public class FPencilBooking {
     public static final String key = "pencil-bookings";
-    public static final String TRIP_SEASON_INDEX = "tripSeasonIndex";
+    public static final String SEASON_TRIP_INDEX = "seasonTripIndex";
     private String seasonCode;
     private String tripCode;
     private String personName;
@@ -21,5 +21,5 @@ public class FPencilBooking {
     private String registrationNumbers;
     private long meetUpDate;
     private PencilBookingStatus pencilBookingStatus;
-    private String tripSeasonIndex;//combination of seasonCode_tripCode for indexing
+    private String seasonTripIndex;//combination of seasonCode_tripCode for indexing
 }

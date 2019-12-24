@@ -92,10 +92,10 @@ public class DBHandle {
         }
     }
 
-    public static <V> ResponseEntity insertDataToDB(Object deoObject, DatabaseReference dbr) {
+    public static ResponseEntity insertDataToDB(Object deoObject, DatabaseReference dbr) {
         SettableApiFuture<DatabaseError> future = SettableApiFuture.create();
         dbr.setValue(deoObject, (databaseError, databaseReference) -> future.set(databaseError));
-        DatabaseError dbError = null;
+        DatabaseError dbError;
         try {
             dbError = future.get();
         } catch (InterruptedException | ExecutionException e) {
@@ -111,7 +111,7 @@ public class DBHandle {
     public static ResponseEntity deleteDataFromDB(DatabaseReference dbr) {
         SettableApiFuture<DatabaseError> future = SettableApiFuture.create();
         dbr.removeValue((databaseError, databaseReference) -> future.set(databaseError));
-        DatabaseError dbError = null;
+        DatabaseError dbError;
         try {
             dbError = future.get();
         } catch (InterruptedException | ExecutionException e) {

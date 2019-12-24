@@ -38,12 +38,12 @@ public class PBReader implements ItemReader<FPencilBooking> {
 
         List<FPencilBooking> resultPBList = new ArrayList<>();
         if (workingTrips.getBody() == null || workingTrips.getBody().isEmpty()) {
-            return null;
+            return resultPBList;
         }
 
         for (FTrip fTrip : workingTrips.getBody()) {
             String key = fTrip.getSeasonCode() + "_" + fTrip.getCode();
-            Query pbQuery = dbRef.child(FPencilBooking.key).orderByChild(FPencilBooking.TRIP_SEASON_INDEX).equalTo(key);
+            Query pbQuery = dbRef.child(FPencilBooking.key).orderByChild(FPencilBooking.SEASON_TRIP_INDEX).equalTo(key);
             ResponseEntity<List<FPencilBooking>> pBookings = DBHandle.retrieveDataList(FPencilBooking.class, pbQuery);
             if (pBookings.getBody() != null && !pBookings.getBody().isEmpty()) {
                 resultPBList.addAll(pBookings.getBody());

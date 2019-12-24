@@ -1,5 +1,7 @@
 package dbbwproject.serviceunit.config;
 
+import dbbwproject.serviceunit.dao.FBooking;
+import dbbwproject.serviceunit.dto.BookingDTO;
 import dbbwproject.serviceunit.dto.PencilBookingDTO;
 import dbbwproject.serviceunit.dao.FPencilBooking;
 import org.modelmapper.*;
@@ -15,7 +17,7 @@ import java.text.SimpleDateFormat;
 
 @Configuration
 public class ObjectMapperConfig {
-    static final String YYYY_MM_DD_T_HH_MM_SS_MILSEC = "yyyy-MM-dd'T'HH:mm:ss.SSS";
+    private static final String YYYY_MM_DD_T_HH_MM_SS_MILSEC = "yyyy-MM-dd'T'HH:mm:ss.SSS";
 
     @Bean
     public ModelMapper createModelMapper() {
@@ -28,10 +30,29 @@ public class ObjectMapperConfig {
             @Override
             protected void configure() {
                 using(pbdto -> ((PencilBookingDTO) pbdto.getSource()).getSeasonCode() + "_" + ((PencilBookingDTO) pbdto.getSource()).getTripCode())
-                        .map(source, destination.getTripSeasonIndex());
+                        .map(source, destination.getSeasonTripIndex());
             }
         };
         modelMapper.createTypeMap(PencilBookingDTO.class, FPencilBooking.class).addMappings(pm1);
+
+        //BookingDTO to FBooking mappings
+        PropertyMap<BookingDTO, FBooking> pm2 = new PropertyMap<BookingDTO, FBooking>() {
+            @Override
+            protected void configure() {
+                using(pbdto -> ((BookingDTO) pbdto.getSource()).getSeasonCode() + "_" + ((BookingDTO) pbdto.getSource()).getTripCode())
+                        .map(source, destination.getSeasonTripIndex());
+            }
+        };
+        PropertyMap<BookingDTO, FBooking> pm3 = new PropertyMap<BookingDTO, FBooking>() {
+            @Override
+            protected void configure() {
+                using(pbdto -> ((BookingDTO) pbdto.getSource()).getSeasonCode() + "_" + ((BookingDTO) pbdto.getSource()).getTripCode() + "_" + ((BookingDTO) pbdto.getSource()).getPbPersonName())
+                        .map(source, destination.getSeasonTripPNameIndex());
+            }
+        };
+        modelMapper.createTypeMap(BookingDTO.class, FBooking.class)
+                .addMappings(pm2)
+                .addMappings(pm3);
 
         //String to long mappings
         Converter<String, Long> toStringDate = new AbstractConverter<String, Long>() {

@@ -46,6 +46,8 @@ public class PencilBookingDTO {
     private String registrationNumbers;
 
     @NotBlank
+    @Pattern(regexp = "^(\\d{4})\\D?(0[1-9]|1[0-2])\\D?([12]\\d|0[1-9]|3[01])(\\D?([01]\\d|2[0-3])\\D?([0-5]\\d)\\D?([0-5]\\d)?\\D?(\\d{3})?)?$"
+            , message = "Meeting Date should be  in yyyy-MM-dd'T'HH:mm:ss.SSS format")
     @ApiModelProperty(notes = "Date which the customer of pencil booking should come to Mahamega office with documents for first meet up in yyyy-MM-dd'T'HH:mm:ss.SSS format.", example = "2019-12-21T13:10:26.641", required = true)
     private String meetUpDate;
 
