@@ -29,9 +29,9 @@ public class NotificationController {
         return notificationService.getAllNotifications(lastCreatedDate, size);
     }
 
-    @PostMapping("notifications")
-    @ApiOperation(value = "Create a notification", response = ResponseEntity.class)
-    public ResponseEntity createNewNotification(@Valid @RequestBody NotificationDTO resource) {
-        return notificationService.createNewNotification(resource);
-    }
+//    @PostMapping("notifications")
+//    @ApiOperation(value = "Create a notification", response = ResponseEntity.class)
+//    public ResponseEntity createNewNotification(@Valid @RequestBody NotificationDTO resource) {
+//        return notificationService.createNewNotification(resource);
+//    }
 }

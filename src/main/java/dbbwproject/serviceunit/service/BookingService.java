@@ -10,14 +10,18 @@ import dbbwproject.serviceunit.dao.FTrip;
 import dbbwproject.serviceunit.dto.BookingDTO;
 import dbbwproject.serviceunit.dto.TripStatus;
 import dbbwproject.serviceunit.firebasehandler.DBHandle;
+import dbbwproject.serviceunit.pdfhandler.application.MdyApplication;
+import dbbwproject.serviceunit.pdfhandler.application.MdyApplicationHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.*;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.client.ResourceAccessException;
 
+import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -122,5 +126,30 @@ public class BookingService extends AbstractService {
         ValidateResource.validateDataAvaiAndReturn(FBooking.class, true, dbRef.child(FBooking.key).child(bookingKey), String.format(bookingNotExist, seasonCode, tripCode, Integer.toString(regNumber)));
         DatabaseReference dbr = dbRef.child(FBooking.key).child(bookingKey);
         return DBHandle.deleteDataFromDB(dbr);
+    }
+
+    public ResponseEntity<InputStreamResource> getMdyApplicationPdf(String seasonCode, String tripCode, int regNumber) {
+        ResponseEntity<BookingDTO> res = getBookingByRegNumber(seasonCode, tripCode, regNumber);
+        if (res.getStatusCode() != HttpStatus.OK) {
+            return new ResponseEntity<>(res.getStatusCode());
+        }
+        if (res.getBody() == null) {
+            throw new ResourceAccessException(String.format(bookingNotExist, seasonCode, tripCode, Integer.toString(regNumber)));
+        }
+
+        MdyApplication pdfObj = modelMapper.map(res.getBody(), MdyApplication.class);
+        String fileName = res.getBody().getSeasonCode() + "_" + res.getBody().getTripCode() + "_" + res.getBody().getRegistrationNumber();
+
+        try (ByteArrayInputStream byteArrayInputStream = MdyApplicationHandler.generatePdfAsByteArray(pdfObj)) {
+            InputStreamResource in = new InputStreamResource(byteArrayInputStream);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + fileName + ".pdf")
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_PDF_VALUE)
+                    .body(in);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+
     }
 }

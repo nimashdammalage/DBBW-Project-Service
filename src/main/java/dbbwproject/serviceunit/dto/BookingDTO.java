@@ -13,27 +13,27 @@ import javax.validation.constraints.*;
 public class BookingDTO {
     //region Meta Data of booking
     @NotBlank
-    @Size(max = 50, message = "season code can not exceed 50 characters")
+    @Size(max = 10, message = "season code can not exceed 10 characters")
     @Pattern(regexp = "^[a-zA-Z0-9]*$", message = "season code can only contain A-Z,a-z and 0-9 letters")
-    @ApiModelProperty(notes = "Code of the season.", example = "seasonCode1", required = true)
+    @ApiModelProperty(notes = "Code of the season.", example = "s1", required = true)
     private String seasonCode;
 
     @NotBlank
-    @Size(max = 50, message = "trip code can not exceed 50 characters")
+    @Size(max = 5, message = "trip code can not exceed 5 characters")
     @Pattern(regexp = "^[a-zA-Z0-9]*$", message = "trip code can only contain A-Z,a-z and 0-9 letters")
-    @ApiModelProperty(notes = "Code of the trip.", example = "tripCode1", required = true)
+    @ApiModelProperty(notes = "Code of the trip.", example = "t12", required = true)
     private String tripCode;
 
     @NotBlank
-    @Size(max = 200, message = "trip code can not exceed 200 characters")
+    @Size(max = 100, message = "trip code can not exceed 100 characters")
     @Pattern(regexp = "^[a-zA-Z]*$", message = "person name can only contain A-Z,a-z letters")
     @ApiModelProperty(notes = "Name of the customer of pencil booking. Note that (seasonCode,tripCode,Name) is unique", example = "Gunasekara", required = true)
     private String pbPersonName;
 
     @NotBlank
-    @Pattern(regexp = "^(\\d{4})\\D?(0[1-9]|1[0-2])\\D?([12]\\d|0[1-9]|3[01])(\\D?([01]\\d|2[0-3])\\D?([0-5]\\d)\\D?([0-5]\\d)?\\D?(\\d{3})?)?$"
-            , message = "Trip start date / flight departure Date should be  in yyyy-MM-dd'T'HH:mm:ss.SSS format")
-    @ApiModelProperty(notes = "Trip start date / flight departure Date in yyyy-MM-dd'T'HH:mm:ss.SSS format", example = "2019-12-21T13:10:26.641")
+    @Pattern(regexp = "^\\d{4}[/\\-](0?[1-9]|1[012])[/\\-](0?[1-9]|[12][0-9]|3[01])$"
+            , message = "Trip start date / flight departure Date should be  in yyyy-MM-dd format")
+    @ApiModelProperty(notes = "Trip start date / flight departure Date in yyyy-MM-dd format", example = "2019-12-21")
     private String tripStartDate;
 
     @Positive
@@ -46,7 +46,7 @@ public class BookingDTO {
     @Size(max = 44, message = "surname can not exceed 44 characters")
     @Pattern(regexp = "^[a-zA-Z]*$", message = "person name can only contain A-Z,a-z letters")
     @ApiModelProperty(notes = "Surname of the customer of pencil booking.", example = "Ekanayake", required = true)
-    private String surname;
+    private String surName;
 
     @NotBlank
     @Size(max = 44, message = "OtherNames can not exceed 44 characters")
@@ -84,7 +84,9 @@ public class BookingDTO {
     private String tpNoForContacts2;
 
     @NotBlank
-    @ApiModelProperty(notes = "Date of birth of passenger in yyyy-MM-dd'T'HH:mm:ss.SSS format", example = "1998-12-21T13:10:26.641", required = true)
+    @Pattern(regexp = "^\\d{4}[/\\-](0?[1-9]|1[012])[/\\-](0?[1-9]|[12][0-9]|3[01])$"
+            , message = "Date of birth should be  in yyyy-MM-dd format")
+    @ApiModelProperty(notes = "Date of birth of passenger in yyyy-MM-dd format", example = "1998-12-21", required = true)
     private String dateOfBirth;
 
     @NotBlank
@@ -98,7 +100,7 @@ public class BookingDTO {
     private String nicNo;
 
     @ApiModelProperty(notes = "Gender of passenger.", example = "MALE", required = true, allowableValues = "MALE,FEMALE")
-    private Gender sex;
+    private Gender gender;
 
     @Size(max = 22, message = "job can not exceed 22 characters")
     @ApiModelProperty(notes = "job of passenger.", example = "Software Engineer")
@@ -176,7 +178,7 @@ public class BookingDTO {
     @ApiModelProperty(notes = "whether passenger has presented a medical certificate", example = "true")
     private boolean medicalReport;
 
-    @ApiModelProperty(notes = "whether passenger has other illness than above mentioned", example = "true")
+    @ApiModelProperty(notes = "whether passenger has other illness than above mentioned", example = "High anxity level")
     private boolean otherIllnessExist;
 
     @Size(max = 22, message = "Other illness detail can not exceed 22 characters")
@@ -208,28 +210,28 @@ public class BookingDTO {
 
     //region Personal Documents
     @ApiModelProperty(notes = "whether Birth Certificate received from passenger", example = "true")
-    private boolean BCReceived;
+    private boolean bcReceived;
 
     @ApiModelProperty(notes = "whether Birth Certificate Copy received from passenger", example = "true")
-    private boolean BCCopyReceived;
+    private boolean bcCopyReceived;
 
     @ApiModelProperty(notes = "whether NIC received from passenger", example = "true")
-    private boolean NICReceived;
+    private boolean nicReceived;
 
     @ApiModelProperty(notes = "whether old person NIC received from passenger", example = "true")
-    private boolean OldNICReceived;
+    private boolean oldNicReceived;
 
     @ApiModelProperty(notes = "whether certified photos received from passenger", example = "true")
     private boolean certifiedPhotoReceived;
 
     @ApiModelProperty(notes = "whether copy of NIC received from passenger", example = "true")
-    private boolean copyOfNICReceived;
+    private boolean copyOfNicReceived;
 
     @ApiModelProperty(notes = "whether village officer certification for person's name change received from passenger", example = "true")
     private boolean voCertfiedNameReceived;
 
     @ApiModelProperty(notes = "whether village officer certification for person's date of birth change received from passenger", example = "true")
-    private boolean voCertfiedDOBReceived;
+    private boolean voCertfiedDobReceived;
     //endregion
 
     //region Passport and Dual Nationality
@@ -259,7 +261,7 @@ public class BookingDTO {
     @ApiModelProperty(notes = "old passport number is passport available", example = "N1987812")
     private String oldPPNumber;
 
-    @ApiModelProperty(notes = "old passport expire date in yyyy-MM-dd'T'HH:mm:ss.SSS format if passport available", example = "2019-12-21T13:10:26.641")
+    @ApiModelProperty(notes = "old passport expire date in yyyy-MM-dd format if passport available", example = "2019-12-21")
     private String oldPPExpDate;
 
     @ApiModelProperty(notes = "whether a police report provided if old passport is misplaced", example = "false")
@@ -301,16 +303,16 @@ public class BookingDTO {
     private boolean parentApprovalLetterReceived;
 
     @ApiModelProperty(notes = "whether mother NIC copy received from passenger, if below 20 years old", example = "true")
-    private boolean motherNICCopyReceived;
+    private boolean motherNicCopyReceived;
 
     @ApiModelProperty(notes = "whether father NIC copy received from passenger, if below 20 years old", example = "true")
-    private boolean fatherNICCopyReceived;
+    private boolean fatherNicCopyReceived;
 
     @ApiModelProperty(notes = "whether mother Pasport copy received from passenger, if below 20 years old", example = "true")
-    private boolean motherPPCopyReceived;
+    private boolean motherPpCopyReceived;
 
     @ApiModelProperty(notes = "whether father Passport copy received from passenger, if below 20 years old", example = "true")
-    private boolean fatherPPCopyReceived;
+    private boolean fatherPpCopyReceived;
 
     @ApiModelProperty(notes = "whether parent marriage certificate received from passenger, if below 20 years old", example = "true")
     private boolean parentMarriageCertificateReceived;

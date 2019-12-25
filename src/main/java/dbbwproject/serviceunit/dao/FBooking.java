@@ -23,7 +23,7 @@ public class FBooking {
     //endregion
 
     //region Personal Details
-    private String surname;
+    private String surName;
     private String otherNames;
     private String nicAddress;
     private String permanentAddress;
@@ -34,7 +34,7 @@ public class FBooking {
     private String dateOfBirth;
     private String placeOfBirth;
     private String nicNo;
-    private Gender sex;
+    private Gender gender;
     private String job;
     private boolean married;
     private String spouseName;
@@ -69,14 +69,14 @@ public class FBooking {
     //endregion
 
     //region Personal Documents
-    private boolean BCReceived;
-    private boolean BCCopyReceived;
-    private boolean NICReceived;
-    private boolean OldNICReceived;
+    private boolean bcReceived;
+    private boolean bcCopyReceived;
+    private boolean nicReceived;
+    private boolean oldNicReceived;
     private boolean certifiedPhotoReceived;
-    private boolean copyOfNICReceived;
+    private boolean copyOfNicReceived;
     private boolean voCertfiedNameReceived;
-    private boolean voCertfiedDOBReceived;
+    private boolean voCertfiedDobReceived;
     //endregion
 
     //region Passport and Dual Nationality
@@ -101,15 +101,18 @@ public class FBooking {
     private boolean faxFormDualCitizen;
     //endregion
 
-    //region Special Requirements
+    //Special requirements young child
     private boolean parentApprovalLetterReceived;
-    private boolean motherNICCopyReceived;
-    private boolean fatherNICCopyReceived;
-    private boolean motherPPCopyReceived;
-    private boolean fatherPPCopyReceived;
+    private boolean motherNicCopyReceived;
+    private boolean fatherNicCopyReceived;
+    private boolean motherPpCopyReceived;
+    private boolean fatherPpCopyReceived;
     private boolean parentMarriageCertificateReceived;
     private boolean informedParentAccompany;
     private boolean parentCertifiedLetter;
+    //endregion
+
+    //Special requirements young old person
     private boolean ownerCertifiedLetterOldPax;
     private boolean judgeCertifiedLetterOldPax;
     //endregion

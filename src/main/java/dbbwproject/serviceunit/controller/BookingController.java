@@ -5,6 +5,7 @@ import dbbwproject.serviceunit.service.BookingService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -53,5 +54,10 @@ public class BookingController {
         return bookingService.deleteBookingByRegNumber(seasonCode, tripCode, regNumber);
     }
 
+    @GetMapping("{seasonCode}/trips/{tripCode}/bookings/{regNumber}/mdyapplicationpdf")
+    @ApiOperation(value = "Retrieve Mahamegha Application form(PDF) by registration number", response = ResponseEntity.class)
+    public ResponseEntity<InputStreamResource> getMdyApplicationPdf(@PathVariable String seasonCode, @PathVariable String tripCode, @PathVariable int regNumber) {
+        return bookingService.getMdyApplicationPdf(seasonCode, tripCode, regNumber);
+    }
 
 }

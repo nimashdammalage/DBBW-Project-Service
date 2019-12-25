@@ -1,7 +1,9 @@
 package dbbwproject.serviceunit.config;
 
 import dbbwproject.serviceunit.dao.FBooking;
+import dbbwproject.serviceunit.dao.FNotification;
 import dbbwproject.serviceunit.dto.BookingDTO;
+import dbbwproject.serviceunit.dto.NotificationDTO;
 import dbbwproject.serviceunit.dto.PencilBookingDTO;
 import dbbwproject.serviceunit.dao.FPencilBooking;
 import org.modelmapper.*;
@@ -17,7 +19,8 @@ import java.text.SimpleDateFormat;
 
 @Configuration
 public class ObjectMapperConfig {
-    private static final String YYYY_MM_DD_T_HH_MM_SS_MILSEC = "yyyy-MM-dd'T'HH:mm:ss.SSS";
+    private static final String YYYY_MM_DD = "yyyy-MM-dd";
+    private static final String YYYY_MM_DD_HH_MM_SS_SSS = "yyyy-MM-dd";
 
     @Bean
     public ModelMapper createModelMapper() {
@@ -25,7 +28,7 @@ public class ObjectMapperConfig {
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
         modelMapper.validate(); // test that all fields are mapped
 
-        //PencilBookingDTO to FPencilBooking mappings
+        //region PencilBookingDTO to FPencilBooking mappings
         PropertyMap<PencilBookingDTO, FPencilBooking> pm1 = new PropertyMap<PencilBookingDTO, FPencilBooking>() {
             @Override
             protected void configure() {
@@ -34,8 +37,9 @@ public class ObjectMapperConfig {
             }
         };
         modelMapper.createTypeMap(PencilBookingDTO.class, FPencilBooking.class).addMappings(pm1);
+        //endregion
 
-        //BookingDTO to FBooking mappings
+        //region BookingDTO to FBooking mappings
         PropertyMap<BookingDTO, FBooking> pm2 = new PropertyMap<BookingDTO, FBooking>() {
             @Override
             protected void configure() {
@@ -53,12 +57,30 @@ public class ObjectMapperConfig {
         modelMapper.createTypeMap(BookingDTO.class, FBooking.class)
                 .addMappings(pm2)
                 .addMappings(pm3);
+        //endregion
 
-        //String to long mappings
+        //region FNotification to NotificationDTO  mappings
+        PropertyMap<FNotification, NotificationDTO> pm4 = new PropertyMap<FNotification, NotificationDTO>() {
+            @Override
+            protected void configure() {
+                using(fNotify -> {
+                            long createdDateLong = ((FNotification) fNotify.getSource()).getCreatedDate();
+                            DateFormat df = new SimpleDateFormat(YYYY_MM_DD_HH_MM_SS_SSS);
+                            return df.format(new Date(createdDateLong));
+                        }
+                )
+                        .map(source, destination.getCreatedDate());
+            }
+        };
+        modelMapper.createTypeMap(FNotification.class, NotificationDTO.class)
+                .addMappings(pm4);
+        //endregion
+
+        //region String to long mappings
         Converter<String, Long> toStringDate = new AbstractConverter<String, Long>() {
             @Override
             protected Long convert(String source) {
-                DateFormat df = new SimpleDateFormat(YYYY_MM_DD_T_HH_MM_SS_MILSEC);
+                DateFormat df = new SimpleDateFormat(YYYY_MM_DD);
                 try {
                     return df.parse(source).getTime();
                 } catch (ParseException e) {
@@ -73,7 +95,7 @@ public class ObjectMapperConfig {
         Converter<Long, String> toLongDate = new AbstractConverter<Long, String>() {
             @Override
             protected String convert(Long dateLong) {
-                DateFormat df = new SimpleDateFormat(YYYY_MM_DD_T_HH_MM_SS_MILSEC);
+                DateFormat df = new SimpleDateFormat(YYYY_MM_DD);
                 try {
                     return df.format(new Date(dateLong));
                 } catch (Exception e) {
@@ -84,6 +106,7 @@ public class ObjectMapperConfig {
         };
         modelMapper.createTypeMap(Long.class, String.class);
         modelMapper.addConverter(toLongDate);
+        //endregion
 
         return modelMapper;
     }

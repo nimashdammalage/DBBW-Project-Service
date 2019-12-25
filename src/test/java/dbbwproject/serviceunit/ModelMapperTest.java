@@ -31,6 +31,6 @@ public class ModelMapperTest {
 
         LocalDate localDate = LocalDate.of(2018, 2, 15);
         Date date = new Date();
-        assertEquals(modelMapper.map(date.getTime(), String.class),"2019-12-21T13:10:26.641");
+        assertEquals(modelMapper.map(date.getTime(), String.class),"2019-12-21");
     }
 }

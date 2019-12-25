@@ -42,17 +42,5 @@ public abstract class AbstractService {
     public AbstractService(ModelMapper modelMapper, FirebaseApp firebaseApp) {
         this.modelMapper = modelMapper;
         dbRef = FirebaseDatabase.getInstance(firebaseApp).getReference("resources");
-        dbRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                Object document = dataSnapshot.getValue();
-                System.out.println(document);
-            }
-
-            @Override
-            public void onCancelled(DatabaseError error) {
-                System.out.println("db error" + error);
-            }
-        });
     }
 }
