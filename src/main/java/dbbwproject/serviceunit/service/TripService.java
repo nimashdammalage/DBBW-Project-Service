@@ -19,6 +19,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -95,9 +96,11 @@ public class TripService extends AbstractService {
         String key = seasonCode + "_" + tripCode;
         FSeason fSeason = ValidateResource.validateDataAvaiAndReturn(FSeason.class, true, dbRef.child(FSeason.key).child(seasonCode), String.format(seasonNotExist, seasonCode));
         ValidateResource.validateArgument(fSeason.getStatus() == SeasonStatus.COMPLETED, String.format(completedSeasonFound, seasonCode));
-        ValidateResource.validateDataAvaiAndReturn(FTrip.class, true, dbRef.child(FTrip.key).child(key), String.format(tripNotExist, tripCode, seasonCode));
+        FTrip fTripOld = ValidateResource.validateDataAvaiAndReturn(FTrip.class, true, dbRef.child(FTrip.key).child(key), String.format(tripNotExist, tripCode, seasonCode));
 
         FTrip fTrip = modelMapper.map(resource, FTrip.class);
+        fTrip.setModifiedTimestamp(new Date().getTime());
+        fTrip.setCreatedTimestamp(fTripOld.getCreatedTimestamp());
         DatabaseReference dbr = dbRef.child(FTrip.key).child(key);
         return DBHandle.insertDataToDB(fTrip, dbr);
     }
@@ -111,6 +114,7 @@ public class TripService extends AbstractService {
         ValidateResource.validateDataAvaiAndReturn(FTrip.class, false, dbRef.child(FTrip.key).child(key), String.format(tripAlreadyExists, resource.getCode(), seasonCode));
 
         FTrip fTrip = modelMapper.map(resource, FTrip.class);
+        fTrip.setCreatedTimestamp(new Date().getTime());
         DatabaseReference dbr = dbRef.child(FTrip.key).child(key);
         return DBHandle.insertDataToDB(fTrip, dbr);
     }

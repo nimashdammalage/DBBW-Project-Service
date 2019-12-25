@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class SeasonService extends AbstractService {
@@ -59,10 +60,12 @@ public class SeasonService extends AbstractService {
     public ResponseEntity modifySeasonByCode(String seasonCode, SeasonDTO resource) {
         ValidateResource.validateArgument(!seasonCode.equals(resource.getCode()), "season's code: " + resource.getCode() + " and code in url: " + seasonCode + " does not match");
         String key = resource.getCode();
-        ValidateResource.validateDataAvaiAndReturn(FSeason.class, true, dbRef.child(FSeason.key).child(key), String.format(seasonNotExist, key));
+        FSeason fSeasonOld = ValidateResource.validateDataAvaiAndReturn(FSeason.class, true, dbRef.child(FSeason.key).child(key), String.format(seasonNotExist, key));
         ValidateResource.validateDataAvaiAndReturn(resource.getStatus() == SeasonStatus.CURRENT, FSeason.class, false, dbRef.child(FSeason.key).orderByChild(FSeason.STATUS).equalTo(SeasonStatus.CURRENT.toString()), duplicateCurrentSeason);
 
         FSeason fseason = modelMapper.map(resource, FSeason.class);
+        fseason.setModifiedTimestamp(new Date().getTime());
+        fseason.setCreatedTimestamp(fSeasonOld.getCreatedTimestamp());
         DatabaseReference dbr = dbRef.child(FSeason.key).child(key);
         return DBHandle.insertDataToDB(fseason, dbr);
     }
@@ -73,6 +76,7 @@ public class SeasonService extends AbstractService {
         ValidateResource.validateDataAvaiAndReturn(resource.getStatus() == SeasonStatus.CURRENT, FSeason.class, false, dbRef.child(FSeason.key).orderByChild(FSeason.STATUS).equalTo(SeasonStatus.CURRENT.toString()), duplicateCurrentSeason);
 
         FSeason fseason = modelMapper.map(resource, FSeason.class);
+        fseason.setCreatedTimestamp(new Date().getTime());
         DatabaseReference dbr = dbRef.child(FSeason.key).child(key);
         return DBHandle.insertDataToDB(fseason, dbr);
     }

@@ -24,6 +24,7 @@ import org.springframework.web.client.ResourceAccessException;
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -54,6 +55,7 @@ public class BookingService extends AbstractService {
         validateRegNumber(resource.getRegistrationNumber(), fPencilBooking.getPersonName(), fPencilBooking.getRegistrationNumbers());
 
         FBooking fBooking = modelMapper.map(resource, FBooking.class);
+        fBooking.setCreatedTimestamp(new Date().getTime());
         DatabaseReference dbr = dbRef.child(FBooking.key).child(bookingKey);
         return DBHandle.insertDataToDB(fBooking, dbr);
 
@@ -113,10 +115,12 @@ public class BookingService extends AbstractService {
         FTrip fTrip = ValidateResource.validateDataAvaiAndReturn(FTrip.class, true, dbRef.child(FTrip.key).child(tripKey), String.format(tripNotExist, tripCode, seasonCode));
         ValidateResource.validateArgument(fTrip.getTripStatus() == TripStatus.COMPLETED, String.format(completeTRipFound, tripCode, seasonCode));
         FPencilBooking fPencilBooking = ValidateResource.validateDataAvaiAndReturn(FPencilBooking.class, true, dbRef.child(FPencilBooking.key).child(pbKey), String.format(penBkNotExist, seasonCode, tripCode, resource.getPbPersonName()));
-        ValidateResource.validateDataAvaiAndReturn(FBooking.class, true, dbRef.child(FBooking.key).child(bookingKey), String.format(bookingNotExist, seasonCode, tripCode, Integer.toString(regNumber)));
+        FBooking fBookingOld = ValidateResource.validateDataAvaiAndReturn(FBooking.class, true, dbRef.child(FBooking.key).child(bookingKey), String.format(bookingNotExist, seasonCode, tripCode, Integer.toString(regNumber)));
         validateRegNumber(resource.getRegistrationNumber(), fPencilBooking.getPersonName(), fPencilBooking.getRegistrationNumbers());
 
         FBooking fBooking = modelMapper.map(resource, FBooking.class);
+        fBooking.setModifiedTimestamp(new Date().getTime());
+        fBooking.setCreatedTimestamp(fBookingOld.getCreatedTimestamp());
         DatabaseReference dbr = dbRef.child(FBooking.key).child(bookingKey);
         return DBHandle.insertDataToDB(fBooking, dbr);
     }

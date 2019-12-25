@@ -36,7 +36,6 @@ public class PencilBookingService extends AbstractService {
     public ResponseEntity createNewPencilBooking(String seasonCode, String tripCode, PencilBookingDTO resource) {
         String key = seasonCode + "_" + tripCode + "_" + resource.getPersonName();
         String tripKey = seasonCode + "_" + tripCode;
-        FPencilBooking fPencilBooking = modelMapper.map(resource, FPencilBooking.class);
 
         ValidateResource.validateArgument(!seasonCode.equals(resource.getSeasonCode()), String.format(seasonCodeUrlNotMatch, resource.getSeasonCode(), seasonCode));
         ValidateResource.validateArgument(!tripCode.equals(resource.getTripCode()), String.format(tripCodeUrlNotMatch, resource.getTripCode(), tripCode));
@@ -47,6 +46,8 @@ public class PencilBookingService extends AbstractService {
         validateRegNumSequence(resource.getRegistrationNumbers(), seasonCode, tripCode, resource.getPersonName(), fTrip.getPassengerCount());
         validateMeetingpDateMaxExceed(seasonCode, tripCode, resource.getMeetUpDate());
 
+        FPencilBooking fPencilBooking = modelMapper.map(resource, FPencilBooking.class);
+        fPencilBooking.setCreatedTimestamp(new Date().getTime());
         DatabaseReference dbr = dbRef.child(FPencilBooking.key).child(key);
         return DBHandle.insertDataToDB(fPencilBooking, dbr);
     }
@@ -91,12 +92,14 @@ public class PencilBookingService extends AbstractService {
         String tripKey = seasonCode + "_" + tripCode;
         FSeason fSeason = ValidateResource.validateDataAvaiAndReturn(FSeason.class, true, dbRef.child(FSeason.key).child(seasonCode), String.format(seasonNotExist, seasonCode));
         FTrip fTrip = ValidateResource.validateDataAvaiAndReturn(FTrip.class, true, dbRef.child(FTrip.key).child(tripKey), String.format(tripNotExist, tripCode, seasonCode));
-        ValidateResource.validateDataAvaiAndReturn(FPencilBooking.class, true, dbRef.child(FPencilBooking.key).child(key), String.format(penBkNotExist, seasonCode, tripCode, personName));
+        FPencilBooking fPencilBookingOld = ValidateResource.validateDataAvaiAndReturn(FPencilBooking.class, true, dbRef.child(FPencilBooking.key).child(key), String.format(penBkNotExist, seasonCode, tripCode, personName));
         ValidateResource.validateArgument(fTrip.getTripStatus() == TripStatus.COMPLETED, String.format(completeTRipFound, tripCode, seasonCode));
         validateRegNumSequence(resource.getRegistrationNumbers(), seasonCode, tripCode, personName, fTrip.getPassengerCount());
         validateMeetingpDateMaxExceed(seasonCode, tripCode, resource.getMeetUpDate());
 
         FPencilBooking fPencilBooking = modelMapper.map(resource, FPencilBooking.class);
+        fPencilBooking.setModifiedTimestamp(new Date().getTime());
+        fPencilBooking.setCreatedTimestamp(fPencilBookingOld.getCreatedTimestamp());
         DatabaseReference dbr = dbRef.child(FPencilBooking.key).child(key);
         return DBHandle.insertDataToDB(fPencilBooking, dbr);
     }

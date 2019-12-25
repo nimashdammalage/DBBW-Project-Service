@@ -330,5 +330,10 @@ public class BookingDTO {
     private boolean judgeCertifiedLetterOldPax;
 
     //endregion
+    @ApiModelProperty(notes = "Created person", example = "createdUser")
+    private String createdBy;
+
+    @ApiModelProperty(notes = "Created person", example = "modifiedUser")
+    private String modifiedBy;
 
 }

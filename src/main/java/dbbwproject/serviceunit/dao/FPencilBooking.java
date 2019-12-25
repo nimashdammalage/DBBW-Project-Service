@@ -22,4 +22,8 @@ public class FPencilBooking {
     private long meetUpDate;
     private PencilBookingStatus pencilBookingStatus;
     private String seasonTripIndex;//combination of seasonCode_tripCode for indexing
+    private String createdBy;
+    private String modifiedBy;
+    private long createdTimestamp;
+    private long modifiedTimestamp;
 }

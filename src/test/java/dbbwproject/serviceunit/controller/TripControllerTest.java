@@ -27,10 +27,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @WebMvcTest(controllers = {TripController.class, SeasonController.class})
 class TripControllerTest {
-    SeasonDTO s1 = new SeasonDTO("ss1", SeasonStatus.CURRENT);
-    SeasonDTO sComplete = new SeasonDTO("sCompleteCode", SeasonStatus.COMPLETED);
-    TripDTO trip1 = new TripDTO("trip1", s1.getCode(), 500, "2018-01-13", "2019-02-19", "2020-10-15", 150, TripStatus.COMPLETED);
-    TripDTO tComplete = new TripDTO("trip1", sComplete.getCode(), 500, "2018-01-13", "2019-02-19", "2020-10-15", 150, TripStatus.COMPLETED);
+    SeasonDTO s1 = new SeasonDTO("ss1", SeasonStatus.CURRENT, "createdName", "modifiedName");
+    SeasonDTO sComplete = new SeasonDTO("sCompleteCode", SeasonStatus.COMPLETED, "createdName", "modifiedName");
+    TripDTO trip1 = new TripDTO("trip1", s1.getCode(), 500, "2018-01-13", "2019-02-19", "2020-10-15", 150, TripStatus.COMPLETED, "createdUser", "modifiedUser");
+    TripDTO tComplete = new TripDTO("trip1", sComplete.getCode(), 500, "2018-01-13", "2019-02-19", "2020-10-15", 150, TripStatus.COMPLETED, "createdUser", "modifiedUser");
 
 
     @Autowired
@@ -52,7 +52,7 @@ class TripControllerTest {
     @Test
     public void testTripBookedSeats() throws Exception {
         mockMvc.perform(
-                get("/resource-management/seasons/{seasonCode}/trips/{tripCode}/booked-seat-numbers","ss1","trip1")
+                get("/resource-management/seasons/{seasonCode}/trips/{tripCode}/booked-seat-numbers", "ss1", "trip1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
         )
@@ -86,7 +86,7 @@ class TripControllerTest {
 
     @Test
     public void testTripPOSTNoSeason() throws Exception {
-        TripDTO trip1 = new TripDTO("trip1", "aaa", 500, "2018-01-13", "2019-02-19", "2020-10-15", 150, TripStatus.COMPLETED);
+        TripDTO trip1 = new TripDTO("trip1", "aaa", 500, "2018-01-13", "2019-02-19", "2020-10-15", 150, TripStatus.COMPLETED, "createdUser", "modifiedUser");
         mockMvc.perform(
                 post("/resource-management/seasons/{seasonCode}/trips", "aaa")
                         .content(asJsonString(trip1))
@@ -171,7 +171,7 @@ class TripControllerTest {
     @Test
     public void testTripGETbySeasonAndTrip() throws Exception {
         System.out.println(mockMvc.perform(
-                get("/resource-management/seasons/{seasonCode}/trips/{tripCode}", trip1.getSeasonCode(),trip1.getCode())
+                get("/resource-management/seasons/{seasonCode}/trips/{tripCode}", trip1.getSeasonCode(), trip1.getCode())
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
         )

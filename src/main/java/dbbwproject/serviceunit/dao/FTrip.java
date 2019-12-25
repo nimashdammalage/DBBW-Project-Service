@@ -21,4 +21,8 @@ public class FTrip {
     private long ppColDate;
     private int passengerCount;
     private TripStatus tripStatus;
+    private String createdBy;
+    private String modifiedBy;
+    private long createdTimestamp;
+    private long modifiedTimestamp;
 }

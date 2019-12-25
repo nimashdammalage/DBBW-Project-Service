@@ -116,6 +116,10 @@ public class FBooking {
     private boolean ownerCertifiedLetterOldPax;
     private boolean judgeCertifiedLetterOldPax;
     //endregion
+    private String createdBy;
+    private String modifiedBy;
+    private long createdTimestamp;
+    private long modifiedTimestamp;
 
 }
 

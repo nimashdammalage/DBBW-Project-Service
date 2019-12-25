@@ -28,12 +28,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class SeasonControllerTest {
     @Autowired
     private MockMvc mockMvc;
-    SeasonDTO s1 = new SeasonDTO("c4", SeasonStatus.CURRENT);
-    SeasonDTO s3 = new SeasonDTO("c2", SeasonStatus.COMPLETED);
+    SeasonDTO s1 = new SeasonDTO("c4", SeasonStatus.CURRENT,"createdName","modifiedName");
+    SeasonDTO s3 = new SeasonDTO("c2", SeasonStatus.COMPLETED,"createdName","modifiedName");
 
     @Test
     public void testSeasonStatus() throws Exception {
-        SeasonDTO ss = new SeasonDTO(null, SeasonStatus.COMPLETED);
+        SeasonDTO ss = new SeasonDTO(null, SeasonStatus.COMPLETED,"createdName","modifiedName");
 
         mockMvc.perform(
                 get("/resource-management/seasons/season-status")
@@ -61,7 +61,7 @@ class SeasonControllerTest {
 
     @Test
     public void testSeasonPostDuplicateErr() throws Exception {
-        SeasonDTO s2 = new SeasonDTO(s1.getCode(), SeasonStatus.COMPLETED);
+        SeasonDTO s2 = new SeasonDTO(s1.getCode(), SeasonStatus.COMPLETED,"createdName","modifiedName");
         mockMvc.perform(
                 post("/resource-management/seasons")
                         .content(asJsonString(s2))
@@ -87,7 +87,7 @@ class SeasonControllerTest {
 
     @Test
     public void testSeasonPostTwoCurrentErr() throws Exception {
-        SeasonDTO s4 = new SeasonDTO("c3", SeasonStatus.CURRENT);
+        SeasonDTO s4 = new SeasonDTO("c3", SeasonStatus.CURRENT,"createdName","modifiedName");
         mockMvc.perform(
                 post("/resource-management/seasons")
                         .content(asJsonString(s4))
@@ -126,7 +126,7 @@ class SeasonControllerTest {
 
     @Test
     public void testSeasonputErr() throws Exception {
-        SeasonDTO ss = new SeasonDTO("6rdCode", SeasonStatus.CURRENT);
+        SeasonDTO ss = new SeasonDTO("6rdCode", SeasonStatus.CURRENT,"createdName","modifiedName");
         mockMvc.perform(
                 put("/resource-management/seasons/{code}", "abndse")
                         .content(asJsonString(ss))
@@ -139,7 +139,7 @@ class SeasonControllerTest {
 
     @Test
     public void testSeasonputCurrErr() throws Exception {
-        SeasonDTO ss = new SeasonDTO(s3.getCode(), SeasonStatus.CURRENT);
+        SeasonDTO ss = new SeasonDTO(s3.getCode(), SeasonStatus.CURRENT,"createdName","modifiedName");
 
         mockMvc.perform(
                 put("/resource-management/seasons/{code}", s3.getCode())
@@ -153,7 +153,7 @@ class SeasonControllerTest {
 
     @Test
     public void testSeasonput() throws Exception {
-        SeasonDTO ss = new SeasonDTO(s1.getCode(), SeasonStatus.UP_COMING);
+        SeasonDTO ss = new SeasonDTO(s1.getCode(), SeasonStatus.UP_COMING,"createdName","modifiedName");
 
         mockMvc.perform(
                 put("/resource-management/seasons/{code}", s1.getCode())
