@@ -1,6 +1,8 @@
 package dbbwproject.serviceunit.dao;
 
 import dbbwproject.serviceunit.dto.Gender;
+import dbbwproject.serviceunit.dto.TypeOfService;
+import dbbwproject.serviceunit.dto.TypeOfTravelDoc;
 import lombok.*;
 
 @Getter
@@ -27,11 +29,14 @@ public class FBooking {
     private String otherNames;
     private String nicAddress;
     private String permanentAddress;
+    private String district;
     private String emailAddress;
     private String tpNoForPP;
     private String tpNoForContacts1;
     private String tpNoForContacts2;
     private String dateOfBirth;
+    private String birthCertificateNo;
+    private String birthCertificateDistrict;
     private String placeOfBirth;
     private String nicNo;
     private Gender gender;
@@ -82,8 +87,8 @@ public class FBooking {
     //region Passport and Dual Nationality
     private boolean needToCreatePP;
     private String nmrpNo;
-    private String typeOfService;
-    private String typeOfTravelDoc;
+    private TypeOfService typeOfService;
+    private TypeOfTravelDoc typeOfTravelDoc;
     private boolean wentAbroadBefore;
     private String lastMigrateYear;
     private boolean oldPassportAvailability;

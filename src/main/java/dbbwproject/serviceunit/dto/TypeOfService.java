@@ -1,4 +1,4 @@
-package dbbwproject.serviceunit.pdfhandler.passport;
+package dbbwproject.serviceunit.dto;
 
 public enum TypeOfService {
     NORMAL("typeOfService.normal"),

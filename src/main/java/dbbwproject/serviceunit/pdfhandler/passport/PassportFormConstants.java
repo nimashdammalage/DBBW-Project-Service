@@ -15,4 +15,5 @@ class PassportFormConstants {
     static final int EMAIL_LENGTH = 22;
     static final int FATHER_NIC_NO_LENGTH = 12;
     static final int MOTHER_NIC_NO_LENGTH = 12;
+    static final int BC_NO_LENGTH = 4;
 }

@@ -12,6 +12,8 @@ import dbbwproject.serviceunit.dto.TripStatus;
 import dbbwproject.serviceunit.firebasehandler.DBHandle;
 import dbbwproject.serviceunit.pdfhandler.application.MdyApplication;
 import dbbwproject.serviceunit.pdfhandler.application.MdyApplicationHandler;
+import dbbwproject.serviceunit.pdfhandler.passport.PassportForm;
+import dbbwproject.serviceunit.pdfhandler.passport.PasspostFormHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
@@ -147,7 +149,7 @@ public class BookingService extends AbstractService {
         try (ByteArrayInputStream byteArrayInputStream = MdyApplicationHandler.generatePdfAsByteArray(pdfObj)) {
             InputStreamResource in = new InputStreamResource(byteArrayInputStream);
             return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + fileName + ".pdf")
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + "MahameghaApplication" + fileName + ".pdf")
                     .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_PDF_VALUE)
                     .body(in);
         } catch (Exception e) {
@@ -155,5 +157,29 @@ public class BookingService extends AbstractService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
 
+    }
+
+    public ResponseEntity<InputStreamResource> getPassportFormPdf(String seasonCode, String tripCode, int regNumber) {
+        ResponseEntity<BookingDTO> res = getBookingByRegNumber(seasonCode, tripCode, regNumber);
+        if (res.getStatusCode() != HttpStatus.OK) {
+            return new ResponseEntity<>(res.getStatusCode());
+        }
+        if (res.getBody() == null) {
+            throw new ResourceAccessException(String.format(bookingNotExist, seasonCode, tripCode, Integer.toString(regNumber)));
+        }
+
+        PassportForm ppObj = modelMapper.map(res.getBody(), PassportForm.class);
+        String fileName = res.getBody().getSeasonCode() + "_" + res.getBody().getTripCode() + "_" + res.getBody().getRegistrationNumber();
+
+        try (ByteArrayInputStream byteArrayInputStream = PasspostFormHandler.generatePdfAsByteArray(ppObj)) {
+            InputStreamResource in = new InputStreamResource(byteArrayInputStream);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + "PassportApplication" + fileName + ".pdf")
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_PDF_VALUE)
+                    .body(in);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }

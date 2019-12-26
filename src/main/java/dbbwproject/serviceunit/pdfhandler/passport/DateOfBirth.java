@@ -1,9 +1,14 @@
 package dbbwproject.serviceunit.pdfhandler.passport;
 
 import dbbwproject.serviceunit.pdfhandler.Validate;
-import lombok.Data;
+import lombok.*;
+import org.springframework.web.client.ResourceAccessException;
 
-@Data
+@Getter
+@Setter
+@ToString
+@NoArgsConstructor
+@AllArgsConstructor
 public class DateOfBirth implements Validate {
     private String date;
     private final int DATE_LENGTH = 2;
@@ -21,10 +26,10 @@ public class DateOfBirth implements Validate {
 
     private static void validateField(String field, int length, String fieldName) {
         if (field == null) {
-            throw new IllegalStateException(fieldName + "can not be null in PassportForm object.");
+            throw new ResourceAccessException(fieldName + "can not be null in PassportForm object.");
         }
         if (field.length() > length) {
-            throw new IllegalStateException(fieldName + "size must be less than or equal to " + length + " .");
+            throw new ResourceAccessException(fieldName + "size must be less than or equal to " + length + " .");
         }
     }
 }

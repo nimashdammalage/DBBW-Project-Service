@@ -64,6 +64,11 @@ public class BookingDTO {
     @ApiModelProperty(notes = "Permanent Address of the passenger.", example = "14/7/56,Mount Lavinia", required = true)
     private String permanentAddress;
 
+    @NotBlank
+    @Size(max = 12, message = "District can not exceed 44 characters")
+    @ApiModelProperty(notes = "District of the passenger.", example = "Meegahapura", required = true)
+    private String district;
+
     @Email(message = "Email address is not valid")
     @Size(max = 22, message = "Email Address can not exceed 22 characters")
     @ApiModelProperty(notes = "Email Address of the passenger.", example = "nimash123@gmail.com")
@@ -88,6 +93,16 @@ public class BookingDTO {
             , message = "Date of birth should be  in yyyy-MM-dd format")
     @ApiModelProperty(notes = "Date of birth of passenger in yyyy-MM-dd format", example = "1998-12-21", required = true)
     private String dateOfBirth;
+
+    @NotBlank
+    @Size(max = 4, message = "birthCertificate No can not exceed 4 characters")
+    @ApiModelProperty(notes = "birthCertificate No of the passenger", example = "0645")
+    private String birthCertificateNo;
+
+    @NotBlank
+    @Size(max = 12, message = "birthCertificate District can not exceed 12 characters")
+    @ApiModelProperty(notes = "birth Certificate District of the passenger", example = "Uyandana")
+    private String birthCertificateDistrict;
 
     @NotBlank
     @Size(max = 22, message = "Place of birth can not exceed 22 characters")
@@ -243,10 +258,10 @@ public class BookingDTO {
     private String nmrpNo;
 
     @ApiModelProperty(notes = "whether passport is from Normal or One day service.", example = "NORMAL", allowableValues = "NORMAL,ONE_DAY")
-    private String typeOfService;
+    private TypeOfService typeOfService;
 
     @ApiModelProperty(notes = "whether passport is for all countries or emergency certificate", example = "ALL_COUNTRIES", allowableValues = "ALL_COUNTRIES,MIDDLE_EAST_COUNTRIES,MERGENCY_CERTIFICATE,IDENTITY_CERTIFICATE")
-    private String typeOfTravelDoc;
+    private TypeOfTravelDoc typeOfTravelDoc;
 
     @ApiModelProperty(notes = "whether went abroad before", example = "false")
     private boolean wentAbroadBefore;

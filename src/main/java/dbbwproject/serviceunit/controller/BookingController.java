@@ -60,4 +60,9 @@ public class BookingController {
         return bookingService.getMdyApplicationPdf(seasonCode, tripCode, regNumber);
     }
 
+    @GetMapping("{seasonCode}/trips/{tripCode}/bookings/{regNumber}/passportformpdf")
+    @ApiOperation(value = "Retrieve Mahamegha Application form(PDF) by registration number", response = ResponseEntity.class)
+    public ResponseEntity<InputStreamResource> getPassportFormPdf(@PathVariable String seasonCode, @PathVariable String tripCode, @PathVariable int regNumber) {
+        return bookingService.getPassportFormPdf(seasonCode, tripCode, regNumber);
+    }
 }
