@@ -16,7 +16,7 @@ import javax.validation.Valid;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@CrossOrigin
+@CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("/resource-management/seasons/")
 @Api(value = "Trip Management")

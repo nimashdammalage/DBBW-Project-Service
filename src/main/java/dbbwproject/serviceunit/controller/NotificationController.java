@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.util.List;
 
-@CrossOrigin
+@CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @Api(value = "Notification Management")
 @RequestMapping("/resource-management/")

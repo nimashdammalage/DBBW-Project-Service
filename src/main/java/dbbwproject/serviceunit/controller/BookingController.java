@@ -15,7 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@CrossOrigin
+@CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @Api(value = "Booking Management")
 @RequestMapping("/resource-management/seasons/")
