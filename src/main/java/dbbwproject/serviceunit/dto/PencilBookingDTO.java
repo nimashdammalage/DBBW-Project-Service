@@ -54,9 +54,4 @@ public class PencilBookingDTO {
     @ApiModelProperty(notes = "Status whether the customer of pencil booking arrived for first meet up (on or before meetup date).", example = "CUSTOMER_NOT_ARRIVED")
     private PencilBookingStatus pencilBookingStatus;
 
-    @ApiModelProperty(notes = "Created person", example = "createdUser")
-    private String createdBy;
-
-    @ApiModelProperty(notes = "Created person", example = "modifiedUser")
-    private String modifiedBy;
 }
