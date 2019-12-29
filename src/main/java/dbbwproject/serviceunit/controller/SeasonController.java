@@ -1,5 +1,6 @@
 package dbbwproject.serviceunit.controller;
 
+import dbbwproject.serviceunit.dto.DropDownDTO;
 import dbbwproject.serviceunit.dto.SeasonDTO;
 import dbbwproject.serviceunit.dto.SeasonStatus;
 import dbbwproject.serviceunit.service.SeasonService;
@@ -8,12 +9,14 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.*;
+import java.util.stream.Collectors;
 
-//@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin
 @RestController
 @Api(value = "Season Management")
 @RequestMapping("/resource-management/")
@@ -25,18 +28,31 @@ public class SeasonController {
         this.seasonService = seasonService;
     }
 
-    @ApiOperation(value = "Retrieve a list of all season status", response = ResponseEntity.class)
+    @ApiOperation(value = "Retrieve a list of all season status for drop down", response = ResponseEntity.class)
     @GetMapping("seasons/season-status")
-    public ResponseEntity<Map<SeasonStatus, SeasonStatus>> getAllSeasonStatus() {
-        Map<SeasonStatus, SeasonStatus> resMap = new HashMap<>();
-        Arrays.stream(SeasonStatus.values()).forEach(t -> resMap.put(t, t));
-        return new ResponseEntity<>(resMap, HttpStatus.OK);
+    public ResponseEntity<List<DropDownDTO>> getAllSeasonStatus() {
+        List<DropDownDTO> collect = Arrays.stream(SeasonStatus.values()).map(s -> new DropDownDTO(s, s.toString())).collect(Collectors.toList());
+        return new ResponseEntity<>(collect, HttpStatus.OK);
     }
 
     @ApiOperation(value = "Retrieve a list of all seasons", response = ResponseEntity.class)
     @GetMapping("seasons")
     public ResponseEntity<List<SeasonDTO>> getAllSeasons(@RequestParam(name = "lastSeasonCode", required = false, defaultValue = "") String lastSeasonCode, @RequestParam("size") int size) {
         return seasonService.getAllSeasonsUponLimit(lastSeasonCode, size);
+    }
+
+    @ApiOperation(value = "Retrieve a list of all season codes for drop down", response = ResponseEntity.class)
+    @GetMapping("season-codes")
+    public ResponseEntity<List<DropDownDTO>> getAllSeasonCodes(@RequestParam(name = "lastSeasonCode", required = false, defaultValue = "") String lastSeasonCode, @RequestParam("size") int size) {
+        ResponseEntity<List<SeasonDTO>> res = seasonService.getAllSeasonsUponLimit(lastSeasonCode, size);
+        if (res.getStatusCode() != HttpStatus.OK) {
+            return new ResponseEntity<>(res.getStatusCode());
+        }
+        if (CollectionUtils.isEmpty(res.getBody())) {
+            return ResponseEntity.ok(new ArrayList<>());
+        }
+        List<DropDownDTO> collect = res.getBody().stream().map(s -> new DropDownDTO(s.getCode(), s.getCode())).collect(Collectors.toList());
+        return ResponseEntity.ok(collect);
     }
 
     @ApiOperation(value = "Retrieve season by code", response = ResponseEntity.class)

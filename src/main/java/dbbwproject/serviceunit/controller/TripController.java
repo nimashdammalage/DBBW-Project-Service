@@ -1,5 +1,6 @@
 package dbbwproject.serviceunit.controller;
 
+import dbbwproject.serviceunit.dto.DropDownDTO;
 import dbbwproject.serviceunit.dto.TripDTO;
 import dbbwproject.serviceunit.dto.TripStatus;
 import dbbwproject.serviceunit.service.TripService;
@@ -8,15 +9,14 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
-//@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin
 @RestController
 @RequestMapping("/resource-management/seasons/")
 @Api(value = "Trip Management")
@@ -28,12 +28,11 @@ public class TripController {
         this.tripService = tripService;
     }
 
-    @ApiOperation(value = "Retrieve a list of all trip status", response = ResponseEntity.class)
+    @ApiOperation(value = "Retrieve a list of all trip status for drop down", response = ResponseEntity.class)
     @GetMapping("trips/trip-status")
-    public ResponseEntity<Map<TripStatus, TripStatus>> getAllTripStatus() {
-        Map<TripStatus, TripStatus> resMap = new HashMap<>();
-        Arrays.stream(TripStatus.values()).forEach(t -> resMap.put(t, t));
-        return new ResponseEntity<>(resMap, HttpStatus.OK);
+    public ResponseEntity<List<DropDownDTO>> getAllTripStatus() {
+        List<DropDownDTO> collect = Arrays.stream(TripStatus.values()).map(t -> new DropDownDTO(t, t.toString())).collect(Collectors.toList());
+        return new ResponseEntity<>(collect, HttpStatus.OK);
     }
 
     @GetMapping("{seasonCode}/trips/{tripCode}/booked-seat-numbers")
@@ -49,15 +48,17 @@ public class TripController {
     }
 
     @GetMapping("{seasonCode}/trip-code")
-    @ApiOperation(value = "Retrieve a list of all trips belong to a season", response = ResponseEntity.class)
-    public ResponseEntity<Map<String, String>> getAllTripCodesForSeason(@PathVariable String seasonCode, @RequestParam(name = "lastTripCode", required = false, defaultValue = "") String lastTripCode, @RequestParam("size") int size) {
+    @ApiOperation(value = "Retrieve a list of all trip codes belong to a season", response = ResponseEntity.class)
+    public ResponseEntity<List<DropDownDTO>> getAllTripCodesForSeason(@PathVariable String seasonCode, @RequestParam(name = "lastTripCode", required = false, defaultValue = "") String lastTripCode, @RequestParam("size") int size) {
         ResponseEntity<List<TripDTO>> result = tripService.getAllTripsForSeason(seasonCode, lastTripCode, size);
         if (result.getStatusCode() != HttpStatus.OK) {
             return new ResponseEntity<>(result.getStatusCode());
         }
-        Map<String, String> map = new HashMap<>();
-        result.getBody().stream().forEach(s -> map.put(s.getCode(), s.getCode()));
-        return new ResponseEntity<>(map, HttpStatus.OK);
+        if (CollectionUtils.isEmpty(result.getBody())) {
+            return ResponseEntity.ok(new ArrayList<>());
+        }
+        List<DropDownDTO> collect = result.getBody().stream().map(t -> new DropDownDTO(t.getCode(), t.getCode())).collect(Collectors.toList());
+        return new ResponseEntity<>(collect, HttpStatus.OK);
     }
 
     @GetMapping("{seasonCode}/trips/{tripCode}")

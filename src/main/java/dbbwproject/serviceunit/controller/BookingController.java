@@ -1,17 +1,21 @@
 package dbbwproject.serviceunit.controller;
 
-import dbbwproject.serviceunit.dto.BookingDTO;
+import dbbwproject.serviceunit.dto.*;
 import dbbwproject.serviceunit.service.BookingService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
+@CrossOrigin
 @RestController
 @Api(value = "Booking Management")
 @RequestMapping("/resource-management/seasons/")
@@ -22,6 +26,20 @@ public class BookingController {
     @Autowired
     public BookingController(BookingService bookingService) {
         this.bookingService = bookingService;
+    }
+
+    @ApiOperation(value = "Retrieve a list of TypeOfService for drop down", response = ResponseEntity.class)
+    @GetMapping("trips/bookings/typeofservice")
+    public ResponseEntity<List<DropDownDTO>> getAllTypeOfServices() {
+        List<DropDownDTO> collect = Arrays.stream(TypeOfService.values()).map(t -> new DropDownDTO(t, t.toString())).collect(Collectors.toList());
+        return new ResponseEntity<>(collect, HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "Retrieve a list of TypeOfTravelDoc for drop down", response = ResponseEntity.class)
+    @GetMapping("trips/bookings/typeoftraveldoc")
+    public ResponseEntity<List<DropDownDTO>> getAllTypeOfTravelDocs() {
+        List<DropDownDTO> collect = Arrays.stream(TypeOfTravelDoc.values()).map(t -> new DropDownDTO(t, t.toString())).collect(Collectors.toList());
+        return new ResponseEntity<>(collect, HttpStatus.OK);
     }
 
     @PostMapping("{seasonCode}/trips/{tripCode}/bookings")
