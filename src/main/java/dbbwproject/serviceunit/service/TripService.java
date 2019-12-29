@@ -130,4 +130,14 @@ public class TripService extends AbstractService {
     }
 
 
+    public ResponseEntity<Boolean> isTripByCodeExist(String seasonCode, String tripCode) {
+        ResponseEntity<TripDTO> tripByCode = getTripByCode(seasonCode, tripCode);
+        if (tripByCode.getStatusCode() != HttpStatus.OK) {
+            return new ResponseEntity<>(tripByCode.getStatusCode());
+        }
+        if (tripByCode.getBody() != null) {
+            return ResponseEntity.ok(true);
+        }
+        return ResponseEntity.ok(false);
+    }
 }

@@ -192,4 +192,14 @@ public class PencilBookingService extends AbstractService {
         }
     }
 
+    public ResponseEntity<Boolean> isPencilBookingByPersonNameExist(String seasonCode, String tripCode, String personName) {
+        ResponseEntity<PencilBookingDTO> pbByName = getPencilBookingByPersonName(seasonCode, tripCode, personName);
+        if (pbByName.getStatusCode() != HttpStatus.OK) {
+            return new ResponseEntity<>(pbByName.getStatusCode());
+        }
+        if (pbByName.getBody() != null) {
+            return ResponseEntity.ok(true);
+        }
+        return ResponseEntity.ok(false);
+    }
 }

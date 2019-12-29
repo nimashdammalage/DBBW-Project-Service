@@ -88,4 +88,15 @@ public class SeasonService extends AbstractService {
         DatabaseReference dbr = dbRef.child(FSeason.key).child(code);
         return DBHandle.deleteDataFromDB(dbr);
     }
+
+    public ResponseEntity<Boolean> isSeasonByCodeExist(String code) {
+        ResponseEntity<SeasonDTO> seasonByCode = getSeasonByCode(code);
+        if (seasonByCode.getStatusCode() != HttpStatus.OK) {
+            return new ResponseEntity<>(seasonByCode.getStatusCode());
+        }
+        if (seasonByCode.getBody() != null) {
+            return ResponseEntity.ok(true);
+        }
+        return ResponseEntity.ok(false);
+    }
 }

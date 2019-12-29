@@ -53,6 +53,12 @@ public class BookingController {
         return bookingService.getBookingByRegNumber(seasonCode, tripCode, regNumber);
     }
 
+    @GetMapping("{seasonCode}/trips/{tripCode}/bookings/{regNumber}/exist")
+    @ApiOperation(value = "Retrieve booking by registration number", response = ResponseEntity.class)
+    public ResponseEntity<Boolean> isBookingByRegNumberExist(@PathVariable String seasonCode, @PathVariable String tripCode, @PathVariable int regNumber) {
+        return bookingService.isBookingByRegNumberExist(seasonCode, tripCode, regNumber);
+    }
+
     @GetMapping("{seasonCode}/trips/{tripCode}/bookings")
     @ApiOperation(value = "Retrieve a list of all pencil bookings belong to a trip", response = ResponseEntity.class)
     public ResponseEntity<List<BookingDTO>> getAllBookingsForTrip(@PathVariable String seasonCode, @PathVariable String tripCode, @RequestParam(name = "lastRegNumber", required = false, defaultValue = "") String lastRegNumber, @RequestParam("size") int size) {

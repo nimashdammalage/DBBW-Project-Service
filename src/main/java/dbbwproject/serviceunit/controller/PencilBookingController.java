@@ -45,6 +45,12 @@ public class PencilBookingController {
         return pencilBookingService.getPencilBookingByPersonName(seasonCode, tripCode, personName);
     }
 
+    @GetMapping("{seasonCode}/trips/{tripCode}/pencil-bookings/{personName}/exist")
+    @ApiOperation(value = "Retrieve pencil booking by person name", response = ResponseEntity.class)
+    public ResponseEntity<Boolean> isPencilBookingByPersonNameExist(@PathVariable String seasonCode, @PathVariable String tripCode, @PathVariable String personName) {
+        return pencilBookingService.isPencilBookingByPersonNameExist(seasonCode, tripCode, personName);
+    }
+
     @GetMapping("{seasonCode}/trips/{tripCode}/pencil-bookings")
     @ApiOperation(value = "Retrieve a list of all pencil bookings belong to a trip", response = ResponseEntity.class)
     public ResponseEntity<List<PencilBookingDTO>> getAllPencilBookingsForTrip(@PathVariable String seasonCode, @PathVariable String tripCode, @RequestParam(name = "lastPersonName", required = false, defaultValue = "") String lastPersonName, @RequestParam("size") int size) {

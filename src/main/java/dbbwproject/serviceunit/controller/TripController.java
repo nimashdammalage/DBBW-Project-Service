@@ -66,6 +66,12 @@ public class TripController {
         return tripService.getTripByCode(seasonCode, tripCode);
     }
 
+    @GetMapping("{seasonCode}/trips/{tripCode}/exist")
+    @ApiOperation(value = "Retrieve trip by code", response = ResponseEntity.class)
+    public ResponseEntity<Boolean> isTripByCodeExist(@PathVariable String seasonCode, @PathVariable String tripCode) {
+        return tripService.isTripByCodeExist(seasonCode, tripCode);
+    }
+
     @PutMapping("{seasonCode}/trips/{tripCode}")
     @ApiOperation(value = "Modify existing trip by code", response = ResponseEntity.class)
     public ResponseEntity modifyTripByCode(@PathVariable String seasonCode, @PathVariable String tripCode, @Valid @RequestBody TripDTO resource) {

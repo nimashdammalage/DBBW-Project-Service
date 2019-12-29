@@ -60,6 +60,12 @@ public class SeasonController {
         return seasonService.getSeasonByCode(code);
     }
 
+    @ApiOperation(value = "Retrieve season by code", response = ResponseEntity.class)
+    @GetMapping("seasons/{code}/exist")
+    public ResponseEntity<Boolean> isSeasonByCodeExist(@PathVariable String code) {
+        return seasonService.isSeasonByCodeExist(code);
+    }
+
     @ApiOperation(value = "Modify existing season by code", response = ResponseEntity.class)
     @PutMapping("seasons/{code}")
     public ResponseEntity modifySeasonByCode(@PathVariable String code, @Valid @RequestBody SeasonDTO resource) {

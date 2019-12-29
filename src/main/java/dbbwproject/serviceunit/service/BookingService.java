@@ -182,4 +182,15 @@ public class BookingService extends AbstractService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+    public ResponseEntity<Boolean> isBookingByRegNumberExist(String seasonCode, String tripCode, int regNumber) {
+        ResponseEntity<BookingDTO> bkByRegNum = getBookingByRegNumber(seasonCode, tripCode, regNumber);
+        if (bkByRegNum.getStatusCode() != HttpStatus.OK) {
+            return new ResponseEntity<>(bkByRegNum.getStatusCode());
+        }
+        if (bkByRegNum.getBody() != null) {
+            return ResponseEntity.ok(true);
+        }
+        return ResponseEntity.ok(false);
+    }
 }
