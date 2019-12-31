@@ -12,8 +12,12 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.ConstraintViolationException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @ControllerAdvice
 public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
@@ -46,5 +50,11 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
         List<String> errors = new ArrayList<>();
         errors.add(ex.getLocalizedMessage());
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<List<String>> constraintViolationException(ConstraintViolationException ex) throws IOException {
+        List<String> collect = ex.getConstraintViolations().stream().map(v -> v.getMessage()).collect(Collectors.toList());
+        return new ResponseEntity<>(collect, HttpStatus.BAD_REQUEST);
     }
 }

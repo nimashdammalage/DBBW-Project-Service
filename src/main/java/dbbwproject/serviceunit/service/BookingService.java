@@ -57,7 +57,7 @@ public class BookingService extends AbstractService {
         validateRegNumber(resource.getRegistrationNumber(), fPencilBooking.getPersonName(), fPencilBooking.getRegistrationNumbers());
 
         FBooking fBooking = modelMapper.map(resource, FBooking.class);
-        fBooking.setCreatedTimestamp(new Date().getTime());
+        fBooking.setCreatedTimestamp(new Date().getTime() * -1);
         DatabaseReference dbr = dbRef.child(FBooking.key).child(bookingKey);
         return DBHandle.insertDataToDB(fBooking, dbr);
 
@@ -121,7 +121,7 @@ public class BookingService extends AbstractService {
         validateRegNumber(resource.getRegistrationNumber(), fPencilBooking.getPersonName(), fPencilBooking.getRegistrationNumbers());
 
         FBooking fBooking = modelMapper.map(resource, FBooking.class);
-        fBooking.setModifiedTimestamp(new Date().getTime());
+        fBooking.setModifiedTimestamp(new Date().getTime() * -1);
         fBooking.setCreatedTimestamp(fBookingOld.getCreatedTimestamp());
         DatabaseReference dbr = dbRef.child(FBooking.key).child(bookingKey);
         return DBHandle.insertDataToDB(fBooking, dbr);

@@ -39,7 +39,7 @@ public class NotificationWriter implements ItemWriter<FPencilBooking> {
             String notId = jobCode + "_" + mappedDTO.getSeasonCode() + "_" + mappedDTO.getTripCode() + "_" + mappedDTO.getPersonName() + j;
             String message = "Person: " + fPencilBooking.getPersonName() + " from trip: " + fPencilBooking.getTripCode() + " and season: " + fPencilBooking.getSeasonCode()
                     + " has not come to office before meet up date: " + mappedDTO.getMeetUpDate() + " .his TP no: " + mappedDTO.getTpNo();
-            FNotification fnotification = new FNotification(notId, new Date().getTime(), message, false);
+            FNotification fnotification = new FNotification(notId, new Date().getTime() * -1, message, false);
 
             System.out.println("inserting FNotification: " + notId + " to DB");
             DBHandle.insertDataToDB(fnotification, dbRef.child(FNotification.key).child(notId));

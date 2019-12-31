@@ -1,8 +1,12 @@
 package dbbwproject.serviceunit.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dbbwproject.serviceunit.dto.DropDownDTO;
 import dbbwproject.serviceunit.dto.SeasonDTO;
 import dbbwproject.serviceunit.dto.SeasonStatus;
+import dbbwproject.serviceunit.dto.datatable.DTReqDTO;
+import dbbwproject.serviceunit.dto.datatable.DTResponse;
 import dbbwproject.serviceunit.service.SeasonService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -10,9 +14,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
+import org.springframework.validation.SmartValidator;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.ConstraintViolation;
 import javax.validation.Valid;
+import javax.validation.Validation;
+import javax.validation.Validator;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -38,6 +46,12 @@ public class SeasonController {
     @GetMapping("seasons")
     public ResponseEntity<List<SeasonDTO>> getAllSeasons(@RequestParam(name = "lastSeasonCode", required = false, defaultValue = "") String lastSeasonCode, @RequestParam("size") int size) {
         return seasonService.getAllSeasonsUponLimit(lastSeasonCode, size);
+    }
+
+    @ApiOperation(value = "Retrieve a list of seasons for data table", response = ResponseEntity.class)
+    @GetMapping("seasons/datatable")
+    public ResponseEntity<DTResponse<SeasonDTO>> getAllSeasonsForDT(@RequestParam(name = "dtReqDTO", required = true) String dtReqDTO) {
+        return seasonService.getAllSeasonsForDT(dtReqDTO);
     }
 
     @ApiOperation(value = "Retrieve a list of all season codes for drop down", response = ResponseEntity.class)

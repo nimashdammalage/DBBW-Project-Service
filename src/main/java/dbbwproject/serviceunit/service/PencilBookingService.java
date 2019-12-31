@@ -47,7 +47,7 @@ public class PencilBookingService extends AbstractService {
         validateMeetingpDateMaxExceed(seasonCode, tripCode, resource.getMeetUpDate());
 
         FPencilBooking fPencilBooking = modelMapper.map(resource, FPencilBooking.class);
-        fPencilBooking.setCreatedTimestamp(new Date().getTime());
+        fPencilBooking.setCreatedTimestamp(new Date().getTime() * -1);
         DatabaseReference dbr = dbRef.child(FPencilBooking.key).child(key);
         return DBHandle.insertDataToDB(fPencilBooking, dbr);
     }
@@ -98,7 +98,7 @@ public class PencilBookingService extends AbstractService {
         validateMeetingpDateMaxExceed(seasonCode, tripCode, resource.getMeetUpDate());
 
         FPencilBooking fPencilBooking = modelMapper.map(resource, FPencilBooking.class);
-        fPencilBooking.setModifiedTimestamp(new Date().getTime());
+        fPencilBooking.setModifiedTimestamp(new Date().getTime() * -1);
         fPencilBooking.setCreatedTimestamp(fPencilBookingOld.getCreatedTimestamp());
         DatabaseReference dbr = dbRef.child(FPencilBooking.key).child(key);
         return DBHandle.insertDataToDB(fPencilBooking, dbr);
