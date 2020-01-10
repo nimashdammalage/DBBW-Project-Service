@@ -1,36 +1,31 @@
 package dbbwproject.serviceunit.controller;
 
-import dbbwproject.serviceunit.config.FireBaseAppConfig;
-import dbbwproject.serviceunit.config.FirebaseAuthAndDBConfig;
-import dbbwproject.serviceunit.config.ObjectMapperConfig;
-import dbbwproject.serviceunit.dto.SeasonDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import dbbwproject.serviceunit.dto.SeasonDto;
 import dbbwproject.serviceunit.dto.SeasonStatus;
-import dbbwproject.serviceunit.dto.TripDTO;
+import dbbwproject.serviceunit.dto.TripDto;
 import dbbwproject.serviceunit.dto.TripStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 
-import static dbbwproject.serviceunit.controller.SeasonControllerTest.asJsonString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@Import({FirebaseAuthAndDBConfig.class, FireBaseAppConfig.class, ObjectMapperConfig.class})
 @RunWith(SpringRunner.class)
 @WebMvcTest(controllers = {TripController.class, SeasonController.class})
 class TripControllerTest {
-    SeasonDTO s1 = new SeasonDTO("ss1", SeasonStatus.CURRENT);
-    SeasonDTO sComplete = new SeasonDTO("sCompleteCode", SeasonStatus.COMPLETED);
-    TripDTO trip1 = new TripDTO("trip1", s1.getCode(), 500, "2018-01-13", "2019-02-19", "2020-10-15", 150, TripStatus.COMPLETED);
-    TripDTO tComplete = new TripDTO("trip1", sComplete.getCode(), 500, "2018-01-13", "2019-02-19", "2020-10-15", 150, TripStatus.COMPLETED);
+    private final SeasonDto s1 = new SeasonDto("ss1", SeasonStatus.CURRENT);
+    private final SeasonDto sComplete = new SeasonDto("sCompleteCode", SeasonStatus.COMPLETED);
+    private final TripDto trip1 = new TripDto("trip1", s1.getCode(), 500, "2018-01-13", "2019-02-19", "2020-10-15", 150, TripStatus.COMPLETED);
+    private final TripDto tComplete = new TripDto("trip1", sComplete.getCode(), 500, "2018-01-13", "2019-02-19", "2020-10-15", 150, TripStatus.COMPLETED);
 
 
     @Autowired
@@ -86,7 +81,7 @@ class TripControllerTest {
 
     @Test
     public void testTripPOSTNoSeason() throws Exception {
-        TripDTO trip1 = new TripDTO("trip1", "aaa", 500, "2018-01-13", "2019-02-19", "2020-10-15", 150, TripStatus.COMPLETED);
+        TripDto trip1 = new TripDto("trip1", "aaa", 500, "2018-01-13", "2019-02-19", "2020-10-15", 150, TripStatus.COMPLETED);
         mockMvc.perform(
                 post("/resource-management/seasons/{seasonCode}/trips", "aaa")
                         .content(asJsonString(trip1))
@@ -222,6 +217,14 @@ class TripControllerTest {
         )
                 .andDo(print())
                 .andExpect(status().isBadRequest());
+    }
+
+    public static String asJsonString(final Object obj) {
+        try {
+            return new ObjectMapper().writeValueAsString(obj);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

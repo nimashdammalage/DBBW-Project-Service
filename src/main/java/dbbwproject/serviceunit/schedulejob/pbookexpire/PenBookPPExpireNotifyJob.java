@@ -1,22 +1,20 @@
 package dbbwproject.serviceunit.schedulejob.pbookexpire;
 
-import dbbwproject.serviceunit.dao.FPencilBooking;
-import org.modelmapper.ModelMapper;
+import dbbwproject.serviceunit.dao.PencilBooking;
+import dbbwproject.serviceunit.repository.NotificationRepository;
+import org.hibernate.SessionFactory;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.launch.JobLauncher;
-import org.springframework.batch.core.step.tasklet.Tasklet;
-import org.springframework.batch.item.ItemProcessor;
-import org.springframework.batch.item.ItemReader;
-import org.springframework.batch.item.ItemWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
+import javax.persistence.EntityManagerFactory;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -24,18 +22,23 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @EnableScheduling
 public class PenBookPPExpireNotifyJob {
     private static final String JOB_NAME = "PenBookPPExpireNotifyJob";
-    private AtomicBoolean enabled = new AtomicBoolean(true);
-    private final ModelMapper modelMapper;
+    private final AtomicBoolean enabled = new AtomicBoolean(true);
     private final JobBuilderFactory jobBuilders;
     private final StepBuilderFactory stepBuilders;
     private final JobLauncher jobLauncher;
+    private final SessionFactory sessionFactory;
+    private final NotificationRepository noRepository;
 
     @Autowired
-    public PenBookPPExpireNotifyJob(ModelMapper modelMapper, JobBuilderFactory jobBuilders, StepBuilderFactory stepBuilders, JobLauncher jobLauncher) {
-        this.modelMapper = modelMapper;
+    public PenBookPPExpireNotifyJob(JobBuilderFactory jobBuilders, StepBuilderFactory stepBuilders, JobLauncher jobLauncher, EntityManagerFactory emf, NotificationRepository noRepository) {
         this.jobBuilders = jobBuilders;
         this.stepBuilders = stepBuilders;
         this.jobLauncher = jobLauncher;
+        this.noRepository = noRepository;
+        if (emf.unwrap(SessionFactory.class) == null) {
+            throw new NullPointerException("factory is not a hibernate factory");
+        }
+        this.sessionFactory = emf.unwrap(SessionFactory.class);
     }
 
     //1000*60*60*24=8 640 0000
@@ -45,7 +48,7 @@ public class PenBookPPExpireNotifyJob {
         if (!enabled.get()) {
             return;
         }
-        JobExecution jobExecution = jobLauncher.run(getJob(),
+        jobLauncher.run(getJob(),
                 new JobParametersBuilder()
                         .addDate("launchDate", new Date())
                         .addString("jobCode", jobCode)
@@ -70,15 +73,15 @@ public class PenBookPPExpireNotifyJob {
 
     @Bean
     @StepScope
-    public Tasklet tasklet() {
+    public CleanupTasklet tasklet() {
         //task tht run repeatedly until meets RepeatStatus.FINISHED; or exception occures
-        return new CleanupTasklet();
+        return new CleanupTasklet(sessionFactory, noRepository);
     }
 
     @Bean
     public Step chunkStep() {
         return stepBuilders.get("chunkStep")
-                .<FPencilBooking, FPencilBooking>chunk(100)
+                .<PencilBooking, PencilBooking>chunk(100)
                 .reader(reader())
                 .processor(processor())
                 .writer(writer())
@@ -87,21 +90,21 @@ public class PenBookPPExpireNotifyJob {
 
     @Bean
     @StepScope
-    public ItemReader<FPencilBooking> reader() {
-        return new PBReader();
+    public PBReader reader() {
+        return new PBReader(sessionFactory);
     }
 
     @Bean
     @StepScope
-    public ItemProcessor<FPencilBooking, FPencilBooking> processor() {
+    public PBFilter processor() {
         return new PBFilter();
     }
 //can combine one or more processors together
 
     @Bean
     @StepScope
-    public ItemWriter<FPencilBooking> writer() {
-        return new NotificationWriter(modelMapper);
+    public NotificationWriter writer() {
+        return new NotificationWriter(noRepository);
     }
 
 }

@@ -1,23 +1,18 @@
 package dbbwproject.serviceunit.schedulejob.pbookexpire;
 
-import dbbwproject.serviceunit.dao.FPencilBooking;
-import dbbwproject.serviceunit.dto.PencilBookingStatus;
+import dbbwproject.serviceunit.dao.PencilBooking;
 import org.springframework.batch.item.ItemProcessor;
 
-import java.util.Date;
-
-
-public class PBFilter implements ItemProcessor<FPencilBooking, FPencilBooking> {
+public class PBFilter implements ItemProcessor<PencilBooking, PencilBooking> {
 
 
     @Override
-    public FPencilBooking process(FPencilBooking fPencilBooking) {
-        Date currentDate = new Date();
-        if (fPencilBooking.getPencilBookingStatus() != PencilBookingStatus.CUSTOMER_ARRIVED
-                && fPencilBooking.getMeetUpDate() < currentDate.getTime()) {
-            return fPencilBooking;
-        }
-        return null;
+    public PencilBooking process(PencilBooking pb) {
+//        Date currentDate = new Date();
+//        if (pb.getPencilBookingStatus() != PencilBookingStatus.CUSTOMER_ARRIVED && pb.getMeetUpDate().before(currentDate)) {
+//            return pb;
+//        }
+        return pb;
         //Returning null indicates that the item should not continue to be processed
     }
 }

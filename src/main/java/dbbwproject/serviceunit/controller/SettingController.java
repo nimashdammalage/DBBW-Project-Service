@@ -1,6 +1,6 @@
 package dbbwproject.serviceunit.controller;
 
-import dbbwproject.serviceunit.dto.SettingsDTO;
+import dbbwproject.serviceunit.dto.SettingsDto;
 import dbbwproject.serviceunit.service.SettingService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -14,7 +14,7 @@ import javax.validation.Valid;
 @Api(value = "Settings Management")
 @RequestMapping("/resource-management/")
 public class SettingController {
-    private SettingService settingService;
+    private final SettingService settingService;
 
     @Autowired
     public SettingController(SettingService settingService) {
@@ -23,13 +23,13 @@ public class SettingController {
 
     @ApiOperation(value = "Retrieve all settings", response = ResponseEntity.class)
     @GetMapping("settings")
-    public ResponseEntity<SettingsDTO> getSettings() {
+    public ResponseEntity<SettingsDto> getSettings() {
         return settingService.getSettings();
     }
 
     @ApiOperation(value = "Modify settings", response = ResponseEntity.class)
     @PostMapping("settings")
-    public ResponseEntity modifySettings(@Valid @RequestBody SettingsDTO resource) {
+    public ResponseEntity modifySettings(@Valid @RequestBody SettingsDto resource) {
         return settingService.modifySettings(resource);
     }
 }

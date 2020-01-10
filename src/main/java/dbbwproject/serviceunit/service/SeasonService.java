@@ -1,102 +1,113 @@
 package dbbwproject.serviceunit.service;
 
-import com.google.firebase.FirebaseApp;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.Query;
-import dbbwproject.serviceunit.dao.FSeason;
-import dbbwproject.serviceunit.dao.FTrip;
-import dbbwproject.serviceunit.dto.SeasonDTO;
+import dbbwproject.serviceunit.dao.Season;
+import dbbwproject.serviceunit.dao.Trip;
+import dbbwproject.serviceunit.dbutil.DBUtil;
+import dbbwproject.serviceunit.dto.DropDownDto;
+import dbbwproject.serviceunit.dto.SeasonDto;
 import dbbwproject.serviceunit.dto.SeasonStatus;
-import dbbwproject.serviceunit.firebasehandler.DBHandle;
-import org.modelmapper.ModelMapper;
-import org.modelmapper.TypeToken;
+import dbbwproject.serviceunit.dto.TripStatus;
+import dbbwproject.serviceunit.dto.datatable.DtReqDto;
+import dbbwproject.serviceunit.dto.datatable.DtResponse;
+import dbbwproject.serviceunit.filter.SeasonFilter;
+import dbbwproject.serviceunit.mapper.SeasonMapperImpl;
+import dbbwproject.serviceunit.repository.SeasonRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.ResourceAccessException;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
+import static dbbwproject.serviceunit.service.ValidateResource.valArg;
+
+@Service
 public class SeasonService extends AbstractService {
-    private final java.lang.reflect.Type seasonDTOListType;
+    private final SeasonRepository seasonRepository;
+    private final SeasonMapperImpl sm;
+    private final DBUtil dbUtil;
+    private final SeasonFilter sf;
 
     @Autowired
-    public SeasonService(ModelMapper modelMapper, FirebaseApp firebaseApp) {
-        super(modelMapper, firebaseApp);
-        seasonDTOListType = new TypeToken<List<SeasonDTO>>() {
-        }.getType();
+    public SeasonService(SeasonRepository seasonRepository, SeasonMapperImpl sm, DBUtil dbUtil, SeasonFilter sf) {
+        this.seasonRepository = seasonRepository;
+        this.sm = sm;
+        this.dbUtil = dbUtil;
+        this.sf = sf;
     }
 
-    public ResponseEntity<List<SeasonDTO>> getAllSeasonsUponLimit(String lastSeasonCode, int size) {
-        Query query;
-        if (lastSeasonCode == null || lastSeasonCode.isEmpty()) {
-            query = dbRef.child(FSeason.key).orderByKey().limitToFirst(size);
-        } else {
-            query = dbRef.child(FSeason.key).orderByKey().startAt(lastSeasonCode).limitToFirst(size);
-        }
-        ResponseEntity<List<FSeason>> fSeasons = DBHandle.retrieveDataList(FSeason.class, query);
-        if (fSeasons.getStatusCode() != HttpStatus.OK) {
-            return new ResponseEntity<>(fSeasons.getStatusCode());
-        }
-        if (fSeasons.getBody() == null || fSeasons.getBody().isEmpty()) {
-            return new ResponseEntity<>(new ArrayList<>(), HttpStatus.OK);
-        }
-        List<SeasonDTO> map = modelMapper.map(fSeasons.getBody(), seasonDTOListType);
-        return new ResponseEntity<>(map, HttpStatus.OK);
+    public ResponseEntity<List<SeasonDto>> getAllSeasonsUponLimit(int fIndex, int size) {
+        List<Season> seasons = dbUtil.getSeasons(fIndex, size);
+        return new ResponseEntity<>(sm.mapSToSdtoList(seasons), HttpStatus.OK);
     }
 
-    public ResponseEntity<SeasonDTO> getSeasonByCode(String seasonCode) {
-        ResponseEntity<FSeason> res = DBHandle.retrieveData(FSeason.class, dbRef.child(FSeason.key).child(seasonCode));
-        if (res.getStatusCode() != HttpStatus.OK) {
-            return new ResponseEntity<>(res.getStatusCode());
-        }
-        if (res.getBody() == null) {
-            return new ResponseEntity<>(HttpStatus.OK);
-        }
-        return new ResponseEntity<>(modelMapper.map(res.getBody(), SeasonDTO.class), HttpStatus.OK);
+    public ResponseEntity<List<DropDownDto>> getAllSeasonCodesDropDown() {
+        List<Season> seasons = dbUtil.getSeasons();
+        List<DropDownDto> collect = seasons.stream().map(s -> new DropDownDto(s.getCode(), s.getCode())).collect(Collectors.toList());
+        return ResponseEntity.ok(collect);
     }
 
-    public ResponseEntity modifySeasonByCode(String seasonCode, SeasonDTO resource) {
-        ValidateResource.validateArgument(!seasonCode.equals(resource.getCode()), "season's code: " + resource.getCode() + " and code in url: " + seasonCode + " does not match");
-        String key = resource.getCode();
-        FSeason fSeasonOld = ValidateResource.validateDataAvaiAndReturn(FSeason.class, true, dbRef.child(FSeason.key).child(key), String.format(seasonNotExist, key));
-        ValidateResource.validateDataAvaiAndReturn(resource.getStatus() == SeasonStatus.CURRENT, FSeason.class, false, dbRef.child(FSeason.key).orderByChild(FSeason.STATUS).equalTo(SeasonStatus.CURRENT.toString()), duplicateCurrentSeason);
-
-        FSeason fseason = modelMapper.map(resource, FSeason.class);
-        fseason.setModifiedTimestamp(new Date().getTime());
-        fseason.setCreatedTimestamp(fSeasonOld.getCreatedTimestamp());
-        DatabaseReference dbr = dbRef.child(FSeason.key).child(key);
-        return DBHandle.insertDataToDB(fseason, dbr);
+    public ResponseEntity<SeasonDto> getSeasonByCode(String seasonCode) {
+        Optional<Season> seasonByCode = seasonRepository.findSeasonByCode(seasonCode);
+        if (seasonByCode.isPresent()) {
+            return ResponseEntity.ok(sm.mapSToSdto(seasonByCode.get()));
+        }
+        return ResponseEntity.ok().build();
     }
 
-    public ResponseEntity createNewSeason(SeasonDTO resource) {
-        String key = resource.getCode();
-        ValidateResource.validateDataAvaiAndReturn(FSeason.class, false, dbRef.child(FSeason.key).child(key), String.format(seasonAlreadyExist, key));
-        ValidateResource.validateDataAvaiAndReturn(resource.getStatus() == SeasonStatus.CURRENT, FSeason.class, false, dbRef.child(FSeason.key).orderByChild(FSeason.STATUS).equalTo(SeasonStatus.CURRENT.toString()), duplicateCurrentSeason);
+    public ResponseEntity modifySeasonByCode(String seasonCode, SeasonDto resource) {
+        valArg(!seasonCode.equals(resource.getCode()), String.format(MCons.seasonCodeUrlNotMatch, resource.getCode(), seasonCode));
+        Season seasonByCode = seasonRepository.findSeasonByCode(seasonCode).orElseThrow(() -> new ResourceAccessException(String.format(MCons.seasonNotExist, seasonCode)));
+        //season with status=CURRENT already exist?
+        List<Season> seasonByStatusList = seasonRepository.getSeasonByStatus(SeasonStatus.CURRENT)
+                .orElse(new ArrayList<>())
+                .stream()
+                .filter(s -> !s.getId().equals(seasonByCode.getId()))
+                .collect(Collectors.toList());
+        valArg(resource.getStatus() == SeasonStatus.CURRENT && !seasonByStatusList.isEmpty(), MCons.duplicateCurrentSeason);
+        valForSCompletion(resource.getStatus(), resource.getCode());
+        sm.modSdtoToS(resource, seasonByCode);
+        seasonRepository.save(seasonByCode);
+        return ResponseEntity.ok().build();
+    }
 
-        FSeason fseason = modelMapper.map(resource, FSeason.class);
-        fseason.setCreatedTimestamp(new Date().getTime());
-        DatabaseReference dbr = dbRef.child(FSeason.key).child(key);
-        return DBHandle.insertDataToDB(fseason, dbr);
+    public ResponseEntity createNewSeason(SeasonDto resource) {
+        String code = resource.getCode();
+        Optional<Season> seasonByCode = seasonRepository.findSeasonByCode(code);
+        valArg(seasonByCode.isPresent(), String.format(MCons.seasonAlreadyExist, code));
+        List<Season> seasonsByState = seasonRepository.getSeasonByStatus(SeasonStatus.CURRENT).orElse(new ArrayList<>());
+        valArg(resource.getStatus() == SeasonStatus.CURRENT && !seasonsByState.isEmpty(), MCons.duplicateCurrentSeason);
+        valForSCompletion(resource.getStatus(), resource.getCode());
+        seasonRepository.save(sm.mapSdtoToS(resource));
+        return ResponseEntity.ok().build();
+    }
+
+    private void valForSCompletion(SeasonStatus ss, String code) {
+        if (ss != SeasonStatus.COMPLETED) {
+            return;
+        }
+        List<Trip> trips = dbUtil.getTrips(code);
+        boolean b = trips.stream().anyMatch(t -> t.getTripStatus() != TripStatus.COMPLETED);
+        valArg(b, MCons.incompleteSeason);
     }
 
     public ResponseEntity deleteSeasonByCode(String code) {
-        ValidateResource.validateDataAvaiAndReturn(FSeason.class, true, dbRef.child(FSeason.key).child(code), String.format(seasonNotExist, code));
-        ValidateResource.validateDataAvaiAndReturn(FTrip.class, false, dbRef.child(FTrip.key).orderByChild(FTrip.SEASON_CODE).equalTo(code), String.format(linkedTripExists, code));
-
-        DatabaseReference dbr = dbRef.child(FSeason.key).child(code);
-        return DBHandle.deleteDataFromDB(dbr);
+        Season seasonByCode = seasonRepository.findSeasonByCode(code).orElseThrow(() -> new ResourceAccessException(String.format(MCons.seasonNotExist, code)));
+        valArg(!seasonByCode.getTrips().isEmpty(), String.format(MCons.linkedTripExists, code));
+        seasonRepository.delete(seasonByCode);
+        return ResponseEntity.ok().build();
     }
 
     public ResponseEntity<Boolean> isSeasonByCodeExist(String code) {
-        ResponseEntity<SeasonDTO> seasonByCode = getSeasonByCode(code);
-        if (seasonByCode.getStatusCode() != HttpStatus.OK) {
-            return new ResponseEntity<>(seasonByCode.getStatusCode());
-        }
-        if (seasonByCode.getBody() != null) {
-            return ResponseEntity.ok(true);
-        }
-        return ResponseEntity.ok(false);
+        return ResponseEntity.ok(seasonRepository.findSeasonByCode(code).isPresent());
+    }
+
+    public ResponseEntity<DtResponse<SeasonDto>> getAllSeasonsForDT(DtReqDto dtReqDTO) {
+        DtResponse<SeasonDto> filteredResult = sf.filter(dtReqDTO);
+        return ResponseEntity.ok(filteredResult);
     }
 }

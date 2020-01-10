@@ -1,6 +1,6 @@
 package dbbwproject.serviceunit.controller;
 
-import dbbwproject.serviceunit.dto.NotificationDTO;
+import dbbwproject.serviceunit.dto.NotificationDto;
 import dbbwproject.serviceunit.service.NotificationService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -15,7 +15,7 @@ import java.util.List;
 @Api(value = "Notification Management")
 @RequestMapping("/resource-management/")
 public class NotificationController {
-    private NotificationService notificationService;
+    private final NotificationService notificationService;
 
     @Autowired
     public NotificationController(NotificationService notificationService) {
@@ -24,13 +24,13 @@ public class NotificationController {
 
     @ApiOperation(value = "Retrieve a list of all notifications", response = ResponseEntity.class)
     @GetMapping("notifications")
-    public ResponseEntity<List<NotificationDTO>> getAllNotifications(@RequestParam(name = "lastCreatedDate", required = false) String lastCreatedDate, @RequestParam("size") int size) {
-        return notificationService.getAllNotifications(lastCreatedDate, size);
+    public ResponseEntity<List<NotificationDto>> getAllNotifications(@RequestParam(name = "fIndex", required = false, defaultValue = "0") int fIndex, @RequestParam("size") int size) {
+        return notificationService.getAllNotifications(fIndex, size);
     }
 
-//    @PostMapping("notifications")
-//    @ApiOperation(value = "Create a notification", response = ResponseEntity.class)
-//    public ResponseEntity createNewNotification(@Valid @RequestBody NotificationDTO resource) {
-//        return notificationService.createNewNotification(resource);
-//    }
+    @PostMapping("notifications")
+    @ApiOperation(value = "Create a notification", response = ResponseEntity.class)
+    public ResponseEntity createNewNotification(@Valid @RequestBody NotificationDto resource) {
+        return notificationService.createNewNotification(resource);
+    }
 }

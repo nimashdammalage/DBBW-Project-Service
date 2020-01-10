@@ -1,143 +1,116 @@
 package dbbwproject.serviceunit.service;
 
-import com.google.firebase.FirebaseApp;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.Query;
-import dbbwproject.serviceunit.dao.FPencilBooking;
-import dbbwproject.serviceunit.dao.FSeason;
-import dbbwproject.serviceunit.dao.FTrip;
-import dbbwproject.serviceunit.dto.SeasonStatus;
-import dbbwproject.serviceunit.dto.TripDTO;
-import dbbwproject.serviceunit.firebasehandler.DBHandle;
-import org.apache.commons.lang3.StringUtils;
-import org.modelmapper.ModelMapper;
-import org.modelmapper.TypeToken;
+import dbbwproject.serviceunit.dao.Booking;
+import dbbwproject.serviceunit.dao.PencilBooking;
+import dbbwproject.serviceunit.dao.Season;
+import dbbwproject.serviceunit.dao.Trip;
+import dbbwproject.serviceunit.dbutil.DBUtil;
+import dbbwproject.serviceunit.dto.*;
+import dbbwproject.serviceunit.mapper.TripMapperImpl;
+import dbbwproject.serviceunit.repository.TripRepository;
+import io.micrometer.core.instrument.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.CollectionUtils;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static dbbwproject.serviceunit.service.ValidateResource.valArg;
+
+@Service
 public class TripService extends AbstractService {
-    private final java.lang.reflect.Type tripDTOListType;
+    private final TripRepository tripRepository;
+    private final TripMapperImpl tm;
+    private final DBUtil dbUtil;
 
     @Autowired
-    public TripService(ModelMapper modelMapper, FirebaseApp firebaseApp) {
-        super(modelMapper, firebaseApp);
-        tripDTOListType = new TypeToken<List<TripDTO>>() {
-        }.getType();
+    public TripService(TripRepository tripRepository, TripMapperImpl tm, DBUtil dbUtil) {
+        this.tm = tm;
+        this.dbUtil = dbUtil;
+        this.tripRepository = tripRepository;
     }
 
     public ResponseEntity<List<Integer>> getBookedSeatNumbersForTrip(String seasonCode, String tripCode) {
-        String key = seasonCode + "_" + tripCode;
-        ValidateResource.validateDataAvaiAndReturn(FSeason.class, true, dbRef.child(FSeason.key).child(seasonCode), String.format(seasonNotExist, seasonCode));
-        ValidateResource.validateDataAvaiAndReturn(FTrip.class, true, dbRef.child(FTrip.key).child(key), String.format(tripNotExist, tripCode, seasonCode));
+        Trip trip = dbUtil.getTrip(seasonCode, tripCode);
+        valArg(trip == null, String.format(MCons.tripNotExist, tripCode, seasonCode));
 
-        Query query = dbRef.child(FPencilBooking.key).orderByChild(FPencilBooking.SEASON_TRIP_INDEX).equalTo(key);
-        ResponseEntity<List<FPencilBooking>> result = DBHandle.retrieveDataList(FPencilBooking.class, query);
-        if (result.getStatusCode() != HttpStatus.OK) {
-            return new ResponseEntity<>(result.getStatusCode());
-        }
-
-        //collect data
-        if (CollectionUtils.isEmpty(result.getBody())) {
-            return new ResponseEntity<>(new ArrayList<>(), HttpStatus.OK);
-        }
-
-        List<String> regNumberStrings = result.getBody().stream().map(FPencilBooking::getRegistrationNumbers).collect(Collectors.toList());
         List<Integer> regNumList = new ArrayList<>();
-        for (String regNumberString : regNumberStrings) {
-            if (!CollectionUtils.isEmpty(regNumberStrings))
-                regNumList.addAll(Arrays.stream(regNumberString.split(",")).filter(s -> s != null && !s.trim().isEmpty()).map(Integer::parseInt).collect(Collectors.toList()));
-        }
-        return new ResponseEntity<>(regNumList, HttpStatus.OK);
+        trip.getPencilBookings().forEach(pb -> pb.getRegNumbers().forEach(r -> regNumList.add(r.getRegNumber())));
+        return ResponseEntity.ok(regNumList);
     }
 
-    public ResponseEntity<List<TripDTO>> getAllTripsForSeason(String seasonCode, String lastTripCode, int size) {
-        Query query;
-        if (StringUtils.isBlank(lastTripCode)) {
-            query = dbRef.child(FTrip.key).orderByChild("seasonCode").equalTo(seasonCode).limitToFirst(size);
-        } else {
-            String lastTripKey = seasonCode + "_" + lastTripCode;
-            query = dbRef.child(FTrip.key).orderByKey().startAt(lastTripKey).endAt(seasonCode + "\uf8ff").limitToFirst(size);
-        }
-        ResponseEntity<List<FTrip>> fseasons = DBHandle.retrieveDataList(FTrip.class, query);
-        if (fseasons.getStatusCode() != HttpStatus.OK) {
-            return new ResponseEntity<>(fseasons.getStatusCode());
-        }
-
-        if (CollectionUtils.isEmpty(fseasons.getBody())) {
-            return new ResponseEntity<>(new ArrayList<>(), HttpStatus.OK);
-        }
-        List<TripDTO> map = modelMapper.map(fseasons.getBody(), tripDTOListType);
-        return new ResponseEntity<>(map, HttpStatus.OK);
+    public ResponseEntity<List<TripDto>> getAllTripsForSeason(String seasonCode, int fIndex, int size) {
+        List<Trip> trips = dbUtil.getTrips(seasonCode, fIndex, size);
+        return ResponseEntity.ok(tm.mapTToTdtoList(trips));
     }
 
-    public ResponseEntity<TripDTO> getTripByCode(String seasonCode, String tripCode) {
-        String key = seasonCode + "_" + tripCode;
-        ResponseEntity<FTrip> res = DBHandle.retrieveData(FTrip.class, dbRef.child(FTrip.key).child(key));
-        if (res.getStatusCode() != HttpStatus.OK) {
-            return new ResponseEntity<>(res.getStatusCode());
-        }
-        if (res.getBody() == null) {
-            new ResponseEntity<>(HttpStatus.OK);
-        }
-        return new ResponseEntity<>(modelMapper.map(res.getBody(), TripDTO.class), HttpStatus.OK);
+    public ResponseEntity<List<DropDownDto>> getAllTripCodesForSeasonDropDown(String seasonCode) {
+        List<Trip> trips = dbUtil.getTrips(seasonCode);
+        List<DropDownDto> collect = trips.stream().map(t -> new DropDownDto(t.getCode(), t.getCode())).collect(Collectors.toList());
+        return ResponseEntity.ok(collect);
     }
 
-    public ResponseEntity modifyTripByCode(String seasonCode, String tripCode, TripDTO resource) {
-        ValidateResource.validateArgument(!tripCode.equals(resource.getCode()), String.format(tripCodeUrlNotMatch, resource.getCode(), tripCode));
-        ValidateResource.validateArgument(!seasonCode.equals(resource.getSeasonCode()), String.format(seasonCodeUrlNotMatch, resource.getSeasonCode(), seasonCode));
-        String key = seasonCode + "_" + tripCode;
-        FSeason fSeason = ValidateResource.validateDataAvaiAndReturn(FSeason.class, true, dbRef.child(FSeason.key).child(seasonCode), String.format(seasonNotExist, seasonCode));
-        ValidateResource.validateArgument(fSeason.getStatus() == SeasonStatus.COMPLETED, String.format(completedSeasonFound, seasonCode));
-        FTrip fTripOld = ValidateResource.validateDataAvaiAndReturn(FTrip.class, true, dbRef.child(FTrip.key).child(key), String.format(tripNotExist, tripCode, seasonCode));
-
-        FTrip fTrip = modelMapper.map(resource, FTrip.class);
-        fTrip.setModifiedTimestamp(new Date().getTime());
-        fTrip.setCreatedTimestamp(fTripOld.getCreatedTimestamp());
-        DatabaseReference dbr = dbRef.child(FTrip.key).child(key);
-        return DBHandle.insertDataToDB(fTrip, dbr);
+    public ResponseEntity<TripDto> getTripByCode(String seasonCode, String tripCode) {
+        Trip trip = dbUtil.getTrip(seasonCode, tripCode);
+        if (trip != null) {
+            return ResponseEntity.ok(tm.mapTToTdto(trip));
+        }
+        return ResponseEntity.ok().build();
     }
 
-    public ResponseEntity createNewTrip(String seasonCode, TripDTO resource) {
-        ValidateResource.validateArgument(StringUtils.isBlank(resource.getCode()), "trip code can not be empty or null");
-        ValidateResource.validateArgument(!seasonCode.equals(resource.getSeasonCode()), String.format(seasonCodeUrlNotMatch, resource.getSeasonCode(), seasonCode));
-        String key = seasonCode + "_" + resource.getCode();
-        FSeason fSeason = ValidateResource.validateDataAvaiAndReturn(FSeason.class, true, dbRef.child(FSeason.key).child(seasonCode), String.format(seasonNotExist, seasonCode));
-        ValidateResource.validateArgument(fSeason.getStatus() == SeasonStatus.COMPLETED, String.format(completedSeasonFound, seasonCode));
-        ValidateResource.validateDataAvaiAndReturn(FTrip.class, false, dbRef.child(FTrip.key).child(key), String.format(tripAlreadyExists, resource.getCode(), seasonCode));
+    public ResponseEntity modifyTripByCode(String seasonCode, String tripCode, TripDto resource) {
+        valArg(!tripCode.equals(resource.getCode()), String.format(MCons.tripCodeUrlNotMatch, resource.getCode(), tripCode));
+        valArg(!seasonCode.equals(resource.getSeasonCode()), String.format(MCons.seasonCodeUrlNotMatch, resource.getSeasonCode(), seasonCode));
+        Trip trip = dbUtil.getTrip(seasonCode, tripCode);
+        valArg(trip == null, String.format(MCons.tripNotExist, tripCode, seasonCode));
+        valArg(trip.getSeason().getStatus() == SeasonStatus.COMPLETED, String.format(MCons.completedSeasonFound, seasonCode));
+        valForTCompletion(resource.getTripStatus(), resource.getSeasonCode(), resource.getCode());
+        tm.modTdtoToT(resource, trip);
+        tripRepository.save(trip);
+        return ResponseEntity.ok().build();
+    }
 
-        FTrip fTrip = modelMapper.map(resource, FTrip.class);
-        fTrip.setCreatedTimestamp(new Date().getTime());
-        DatabaseReference dbr = dbRef.child(FTrip.key).child(key);
-        return DBHandle.insertDataToDB(fTrip, dbr);
+
+    public ResponseEntity createNewTrip(String seasonCode, TripDto resource) {
+        valArg(StringUtils.isBlank(resource.getCode()), "trip code can not be empty or null");
+        valArg(!seasonCode.equals(resource.getSeasonCode()), String.format(MCons.seasonCodeUrlNotMatch, resource.getSeasonCode(), seasonCode));
+        Trip trip = dbUtil.getTrip(seasonCode, resource.getCode());
+        valArg(trip != null, String.format(MCons.tripAlreadyExists, resource.getCode(), seasonCode));
+        Season season = dbUtil.getSeason(seasonCode);
+        valArg(season == null, String.format(MCons.seasonNotExist, seasonCode));
+        valArg(season.getStatus() == SeasonStatus.COMPLETED, String.format(MCons.completedSeasonFound, seasonCode));
+        valForTCompletion(resource.getTripStatus(), resource.getSeasonCode(), resource.getCode());
+        tripRepository.save(tm.mapTdtoToT(resource));
+        return ResponseEntity.ok().build();
+    }
+
+    private void valForTCompletion(TripStatus tripStatus, String seasonCode, String tripCode) {
+        if (tripStatus != TripStatus.COMPLETED) {
+            return;
+        }
+        List<PencilBooking> pbs = dbUtil.getPencilBookings(seasonCode, tripCode);
+        boolean pb = pbs.stream().anyMatch(p -> p.getPencilBookingStatus() != PencilBookingStatus.CUSTOMER_ARRIVED);
+        valArg(pb, MCons.incompleteTRipwithPbs);
+        List<Booking> bks = dbUtil.getBookingsForTrip(seasonCode, tripCode);
+        boolean bk = bks.stream().anyMatch(b -> b.getBookingStatus() != BookingStatus.COMPLETED);
+        valArg(bk, MCons.incompleteTRipwithBks);
     }
 
     public ResponseEntity deleteTripByCode(String seasonCode, String tripCode) {
-        String key = seasonCode + "_" + tripCode;
-
-        ValidateResource.validateDataAvaiAndReturn(FTrip.class, true, dbRef.child(FTrip.key).child(key), String.format(tripNotExist, tripCode, seasonCode));
-        ValidateResource.validateDataAvaiAndReturn(FPencilBooking.class, false, dbRef.child(FPencilBooking.key).orderByChild(FPencilBooking.SEASON_TRIP_INDEX).equalTo(key), String.format(linkedPenBookingExists, tripCode, seasonCode));
-
-        DatabaseReference dbr = dbRef.child(FTrip.key).child(key);
-        return DBHandle.deleteDataFromDB(dbr);
+        Trip trip = dbUtil.getTrip(seasonCode, tripCode);
+        valArg(trip == null, String.format(MCons.tripNotExist, tripCode, seasonCode));
+        valArg(!trip.getPencilBookings().isEmpty(), String.format(MCons.linkedPenBookingExists, tripCode, seasonCode));
+        List<Booking> bks = dbUtil.getBookingsForTrip(seasonCode, tripCode);
+        valArg(bks.isEmpty(), String.format(MCons.linkedBookingExists, tripCode, seasonCode));
+        tripRepository.delete(trip);
+        return ResponseEntity.ok().build();
     }
 
 
     public ResponseEntity<Boolean> isTripByCodeExist(String seasonCode, String tripCode) {
-        ResponseEntity<TripDTO> tripByCode = getTripByCode(seasonCode, tripCode);
-        if (tripByCode.getStatusCode() != HttpStatus.OK) {
-            return new ResponseEntity<>(tripByCode.getStatusCode());
-        }
-        if (tripByCode.getBody() != null) {
-            return ResponseEntity.ok(true);
-        }
-        return ResponseEntity.ok(false);
+        Trip trip = dbUtil.getTrip(seasonCode, tripCode);
+        return ResponseEntity.ok(trip != null);
     }
 }

@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/resource-management/seasons/")
 public class BookingController {
 
-    private BookingService bookingService;
+    private final BookingService bookingService;
 
     @Autowired
     public BookingController(BookingService bookingService) {
@@ -29,27 +29,27 @@ public class BookingController {
 
     @ApiOperation(value = "Retrieve a list of TypeOfService for drop down", response = ResponseEntity.class)
     @GetMapping("trips/bookings/typeofservice")
-    public ResponseEntity<List<DropDownDTO>> getAllTypeOfServices() {
-        List<DropDownDTO> collect = Arrays.stream(TypeOfService.values()).map(t -> new DropDownDTO(t, t.toString())).collect(Collectors.toList());
+    public ResponseEntity<List<DropDownDto>> getAllTypeOfServices() {
+        List<DropDownDto> collect = Arrays.stream(TypeOfService.values()).map(t -> new DropDownDto(t, t.toString())).collect(Collectors.toList());
         return new ResponseEntity<>(collect, HttpStatus.OK);
     }
 
     @ApiOperation(value = "Retrieve a list of TypeOfTravelDoc for drop down", response = ResponseEntity.class)
     @GetMapping("trips/bookings/typeoftraveldoc")
-    public ResponseEntity<List<DropDownDTO>> getAllTypeOfTravelDocs() {
-        List<DropDownDTO> collect = Arrays.stream(TypeOfTravelDoc.values()).map(t -> new DropDownDTO(t, t.toString())).collect(Collectors.toList());
+    public ResponseEntity<List<DropDownDto>> getAllTypeOfTravelDocs() {
+        List<DropDownDto> collect = Arrays.stream(TypeOfTravelDoc.values()).map(t -> new DropDownDto(t, t.toString())).collect(Collectors.toList());
         return new ResponseEntity<>(collect, HttpStatus.OK);
     }
 
     @PostMapping("{seasonCode}/trips/{tripCode}/bookings")
     @ApiOperation(value = "Create a booking", response = ResponseEntity.class)
-    public ResponseEntity createNewPencilBooking(@PathVariable String seasonCode, @PathVariable String tripCode, @Valid @RequestBody BookingDTO resource) {
+    public ResponseEntity createNewPencilBooking(@PathVariable String seasonCode, @PathVariable String tripCode, @Valid @RequestBody BookingDto resource) {
         return bookingService.createNewBooking(seasonCode, tripCode, resource);
     }
 
     @GetMapping("{seasonCode}/trips/{tripCode}/bookings/{regNumber}")
     @ApiOperation(value = "Retrieve booking by registration number", response = ResponseEntity.class)
-    public ResponseEntity<BookingDTO> getBookingByRegNumber(@PathVariable String seasonCode, @PathVariable String tripCode, @PathVariable int regNumber) {
+    public ResponseEntity<BookingDto> getBookingByRegNumber(@PathVariable String seasonCode, @PathVariable String tripCode, @PathVariable int regNumber) {
         return bookingService.getBookingByRegNumber(seasonCode, tripCode, regNumber);
     }
 
@@ -61,13 +61,13 @@ public class BookingController {
 
     @GetMapping("{seasonCode}/trips/{tripCode}/bookings")
     @ApiOperation(value = "Retrieve a list of all pencil bookings belong to a trip", response = ResponseEntity.class)
-    public ResponseEntity<List<BookingDTO>> getAllBookingsForTrip(@PathVariable String seasonCode, @PathVariable String tripCode, @RequestParam(name = "lastRegNumber", required = false, defaultValue = "") String lastRegNumber, @RequestParam("size") int size) {
-        return bookingService.getAllBookingsForTrip(seasonCode, tripCode, lastRegNumber, size);
+    public ResponseEntity<List<BookingDto>> getAllBookingsForTrip(@PathVariable String seasonCode, @PathVariable String tripCode, @RequestParam(name = "fIndex", required = false, defaultValue = "0") int fIndex, @RequestParam("size") int size) {
+        return bookingService.getAllBookingsForTrip(seasonCode, tripCode, fIndex, size);
     }
 
     @PutMapping("{seasonCode}/trips/{tripCode}/bookings/{regNumber}")
     @ApiOperation(value = "Modify existing trip by person name", response = ResponseEntity.class)
-    public ResponseEntity modifyBookingByRegNumber(@PathVariable String seasonCode, @PathVariable String tripCode, @PathVariable int regNumber, @RequestBody BookingDTO resource) {
+    public ResponseEntity modifyBookingByRegNumber(@PathVariable String seasonCode, @PathVariable String tripCode, @PathVariable int regNumber, @RequestBody BookingDto resource) {
         return bookingService.modifyBookingByRegNumber(seasonCode, tripCode, regNumber, resource);
     }
 

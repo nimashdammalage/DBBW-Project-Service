@@ -1,30 +1,27 @@
 package dbbwproject.serviceunit.schedulejob.pbookexpire;
 
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.Query;
-import dbbwproject.serviceunit.dao.FPencilBooking;
-import dbbwproject.serviceunit.dao.FTrip;
+import dbbwproject.serviceunit.dao.PencilBooking;
+import dbbwproject.serviceunit.dto.PencilBookingStatus;
 import dbbwproject.serviceunit.dto.TripStatus;
-import dbbwproject.serviceunit.firebasehandler.DBHandle;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.query.Query;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.support.IteratorItemReader;
-import org.springframework.http.ResponseEntity;
 
-import java.util.ArrayList;
 import java.util.List;
 
-public class PBReader implements ItemReader<FPencilBooking> {
-    private ItemReader<FPencilBooking> delegate;
-    private final DatabaseReference dbRef;
+public class PBReader implements ItemReader<PencilBooking> {
+    private ItemReader<PencilBooking> delegate;
+    private final SessionFactory sessionFactory;
 
-    PBReader() {
-        dbRef = FirebaseDatabase.getInstance().getReference("resources");
+    public PBReader(SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
     }
 
     @Override
-    public FPencilBooking read() throws Exception {
-        List<FPencilBooking> fBokList = getList();
+    public PencilBooking read() throws Exception {
+        List<PencilBooking> fBokList = getList();
         System.out.println("Item reader met");
         if (delegate == null) {
             delegate = new IteratorItemReader<>(fBokList);
@@ -32,23 +29,15 @@ public class PBReader implements ItemReader<FPencilBooking> {
         return delegate.read();
     }
 
-    private List<FPencilBooking> getList() {
-        Query workingTripsQuery = dbRef.child(FTrip.key).orderByChild(FTrip.TRIP_STATUS).equalTo(TripStatus.WORKING.toString());
-        ResponseEntity<List<FTrip>> workingTrips = DBHandle.retrieveDataList(FTrip.class, workingTripsQuery);
-
-        List<FPencilBooking> resultPBList = new ArrayList<>();
-        if (workingTrips.getBody() == null || workingTrips.getBody().isEmpty()) {
-            return resultPBList;
+    private List<PencilBooking> getList() {
+        try (Session session = sessionFactory.openSession()) {
+            Query<PencilBooking> query = session.createQuery("From PencilBooking p " +
+                    "where p.trip.tripStatus != ?1 " +
+                    "and p.meetUpDate >= current_date " +
+                    "and p.pencilBookingStatus = ?2", PencilBooking.class)
+                    .setParameter(1, TripStatus.COMPLETED)
+                    .setParameter(2, PencilBookingStatus.CUSTOMER_NOT_ARRIVED);
+            return query.list();
         }
-
-        for (FTrip fTrip : workingTrips.getBody()) {
-            String key = fTrip.getSeasonCode() + "_" + fTrip.getCode();
-            Query pbQuery = dbRef.child(FPencilBooking.key).orderByChild(FPencilBooking.SEASON_TRIP_INDEX).equalTo(key);
-            ResponseEntity<List<FPencilBooking>> pBookings = DBHandle.retrieveDataList(FPencilBooking.class, pbQuery);
-            if (pBookings.getBody() != null && !pBookings.getBody().isEmpty()) {
-                resultPBList.addAll(pBookings.getBody());
-            }
-        }
-        return resultPBList;
     }
 }
