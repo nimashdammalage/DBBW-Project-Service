@@ -22,9 +22,9 @@ public class DtResponse<T> {
     private int draw;
     @ApiModelProperty("Total records, after filtering (i.e. the total number of records after filtering has been applied - " +
             "not just the number of records being returned for this page of data).")
-    private int recordsFiltered;
+    private long recordsFiltered;
     @ApiModelProperty(notes = "Total records, before filtering (i.e. the total number of records in the database)")
-    private int recordsTotal;
+    private long recordsTotal;
     @ApiModelProperty(notes = "Optional: If an error occurs during the running of the server-side processing script, " +
             "you can inform the user of this error by passing back the error message to be displayed using this parameter. " +
             "Do not include if there is no error.")

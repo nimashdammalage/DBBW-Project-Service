@@ -41,14 +41,17 @@ public class DtReqDto {
     @ApiModelProperty(notes = "is an array defining how many columns are being ordered upon - " +
             "i.e. if the array length is 1, then a single column sort is being performed," +
             " otherwise a multi-column sort is being performed")
+    @NotNull(message = "order list can not be null")
     private List<@Valid Order> order = new ArrayList<>();
 
     @ApiModelProperty(notes = "Global search value. To be applied to all columns which have searchable as true")
     private @Valid Search search = new Search();
 
     public void validate() {
-        if (!CollectionUtils.isEmpty(order) && order.get(0).getColumn() < columns.size()) {
-            throw new ResourceAccessException("order column index: " + order.get(0).getColumn() + " exceeds column list size");
+        for (Order order1 : order) {
+            if (order1.getColumn() >= columns.size()) {
+                throw new ResourceAccessException("order column index: " + order.get(0).getColumn() + " exceeds column list size");
+            }
         }
     }
 

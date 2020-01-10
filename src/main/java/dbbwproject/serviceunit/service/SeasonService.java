@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResourceAccessException;
 
+import javax.persistence.EntityManagerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -30,14 +31,14 @@ public class SeasonService extends AbstractService {
     private final SeasonRepository seasonRepository;
     private final SeasonMapperImpl sm;
     private final DBUtil dbUtil;
-    private final SeasonFilter sf;
+    private final EntityManagerFactory emf;
 
     @Autowired
-    public SeasonService(SeasonRepository seasonRepository, SeasonMapperImpl sm, DBUtil dbUtil, SeasonFilter sf) {
+    public SeasonService(SeasonRepository seasonRepository, SeasonMapperImpl sm, DBUtil dbUtil, EntityManagerFactory emf) {
         this.seasonRepository = seasonRepository;
         this.sm = sm;
         this.dbUtil = dbUtil;
-        this.sf = sf;
+        this.emf = emf;
     }
 
     public ResponseEntity<List<SeasonDto>> getAllSeasonsUponLimit(int fIndex, int size) {
@@ -107,7 +108,7 @@ public class SeasonService extends AbstractService {
     }
 
     public ResponseEntity<DtResponse<SeasonDto>> getAllSeasonsForDT(DtReqDto dtReqDTO) {
-        DtResponse<SeasonDto> filteredResult = sf.filter(dtReqDTO);
+        DtResponse<SeasonDto> filteredResult = new SeasonFilter(emf, sm).filter(dtReqDTO);
         return ResponseEntity.ok(filteredResult);
     }
 }

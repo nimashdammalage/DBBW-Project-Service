@@ -1,37 +1,32 @@
 package dbbwproject.serviceunit.filter;
 
 import dbbwproject.serviceunit.dao.Season;
-import dbbwproject.serviceunit.dto.datatable.Column;
-import dbbwproject.serviceunit.dto.datatable.DtReqDto;
-import dbbwproject.serviceunit.dto.datatable.DtResponse;
-import dbbwproject.serviceunit.dto.datatable.Order;
+import dbbwproject.serviceunit.dto.datatable.*;
+import io.micrometer.core.instrument.util.StringUtils;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.persistence.EntityManagerFactory;
-import javax.validation.Valid;
-import javax.validation.constraints.PositiveOrZero;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public abstract class AbstractFiler<T,X> {
+public abstract class AbstractFiler<T, X> {
     private SessionFactory sm;
-    private Class<T> tClass;
+    Class<T> tClass;
     List<QueryParam> queryParams = new ArrayList<>();
     String filterQuery;
-    private Integer totalCount;
-    private Integer filterCount;
+    private Long totalCount;
+    private Long filterCount;
     List<T> resultList = new ArrayList<>();
     String totalQuery = "";
 
-    @Autowired
-    protected AbstractFiler(EntityManagerFactory entityManagerFactory) {
+    AbstractFiler(EntityManagerFactory entityManagerFactory) {
         if (entityManagerFactory.unwrap(SessionFactory.class) == null) {
             throw new NullPointerException("factory is not a hibernate factory");
         }
@@ -72,7 +67,7 @@ public abstract class AbstractFiler<T,X> {
         String countQuery = "select count(*) " + filterQuery;
         Session session = sm.getCurrentSession();
         session.beginTransaction();
-        Query<Integer> cq = session.createQuery(countQuery, Integer.class);
+        Query<Long> cq = session.createQuery(countQuery, Long.class);
 
         buildQueryValues(searchableParamList, cq);
         filterCount = cq.getSingleResult();
@@ -111,8 +106,8 @@ public abstract class AbstractFiler<T,X> {
     private void populateTotalDBRecords(String query) {
         Session session = sm.getCurrentSession();
         session.beginTransaction();
-        Query<Integer> totalq = session.createQuery(query, Integer.class);
-        totalCount = totalq.getSingleResult();
+        Query<Long> totalCountq = session.createQuery(query, Long.class);
+        totalCount = totalCountq.getSingleResult();
         session.getTransaction().commit();
     }
 
@@ -126,10 +121,27 @@ public abstract class AbstractFiler<T,X> {
 
 
     <U> void populateParam(QueryParam<U> q, List<Column> colList, Predicate<Column> filterPredicate, Function<String, U> dataFunction) {
-        Optional<Column> seletedCol = colList.stream().filter(filterPredicate).findFirst();
-        if (seletedCol.isPresent() && seletedCol.get().isSearchable()) {
-            q.setQueryValue(dataFunction.apply(seletedCol.get().getData()));
+        Optional<Column> selectedCol = colList.stream().filter(filterPredicate).findFirst();
+        if (!selectedCol.isPresent()) {
+            return;
+        }
+        if (selectedCol.get().isSearchable() && !StringUtils.isBlank(selectedCol.get().getSearch().getValue())) {
+            q.setQueryValue(dataFunction.apply(selectedCol.get().getSearch().getValue()));
             q.setSearchable(true);
+        }
+        if (selectedCol.get().isOrderable()) {
+            q.setOrderly(true);
+        }
+    }
+
+    void addCmpByOrder(List<Comparator<Season>> coms, Dir dir, Comparator<Season> comparing) {
+        switch (dir) {
+            case asc:
+                coms.add(comparing);
+                break;
+            case dsc:
+                coms.add(comparing.reversed());
+                break;
         }
     }
 

@@ -4,29 +4,32 @@ import dbbwproject.serviceunit.dao.Season;
 import dbbwproject.serviceunit.dto.SeasonDto;
 import dbbwproject.serviceunit.dto.SeasonStatus;
 import dbbwproject.serviceunit.dto.datatable.Column;
+import dbbwproject.serviceunit.dto.datatable.Dir;
 import dbbwproject.serviceunit.dto.datatable.Order;
 import dbbwproject.serviceunit.mapper.SeasonMapperImpl;
 import org.apache.commons.collections4.ComparatorUtils;
-import org.springframework.stereotype.Component;
 
 import javax.persistence.EntityManagerFactory;
 import java.util.*;
 
-@Component
 public class SeasonFilter extends AbstractFiler<Season, SeasonDto> {
     private final SeasonMapperImpl sm;
-
     private QueryParam<String> code = new QueryParam<>("code", true, "code");
     private QueryParam<SeasonStatus> status = new QueryParam<>("status", false, "status");
 
-    protected SeasonFilter(EntityManagerFactory entityManagerFactory, SeasonMapperImpl sm) {
+    public SeasonFilter(EntityManagerFactory entityManagerFactory, SeasonMapperImpl sm) {
         super(entityManagerFactory);
+        tClass = Season.class;
         this.sm = sm;
     }
 
     @Override
-    protected List<SeasonDto> mapResultList(List<Season> resultList) {
-        return sm.mapSToSdtoList(resultList);
+    protected void populateParams(List<Column> colList) {
+        totalQuery = "Select count(*) From Season";
+        populateParam(code, colList, (col) -> code.getCode().equals(col.getData()), (s) -> s);
+        populateParam(status, colList, (col) -> status.getCode().equals(col.getData()), SeasonStatus::valueOf);
+        queryParams.add(code);
+        queryParams.add(status);
     }
 
     @Override
@@ -46,28 +49,27 @@ public class SeasonFilter extends AbstractFiler<Season, SeasonDto> {
     }
 
     @Override
-    protected void populateParams(List<Column> colList) {
-        totalQuery = "Select count(*) From Season";
-        populateParam(code, colList, (col) -> code.getCode().equals(col.getData()), (s) -> s);
-        populateParam(status, colList, (col) -> status.getCode().equals(col.getData()), SeasonStatus::valueOf);
-        queryParams.add(code);
-        queryParams.add(status);
-    }
-
-    @Override
     public void orderResult(List<Order> orders, List<Column> columns) {
         List<Comparator<Season>> coms = new ArrayList<>();
         for (Order order : orders) {
             int colIndex = order.getColumn();
             String data = columns.get(colIndex).getData();
-            if (data.equals(code.getCode())) {
-                coms.add(Comparator.comparing(Season::getCode));
+            Dir dir = order.getDir();
+            if (code.isOrderly() && data.equals(code.getCode())) {
+                addCmpByOrder(coms, dir, Comparator.comparing(Season::getCode));
             }
-            if (data.equals(status.getCode())) {
-                coms.add(Comparator.comparing(Season::getStatus));
+            if (status.isOrderly() && data.equals(status.getCode())) {
+                addCmpByOrder(coms, dir, Comparator.comparing(Season::getStatus));
             }
         }
-        resultList.sort(ComparatorUtils.chainedComparator(coms));
+        if (!coms.isEmpty()) {
+            resultList.sort(ComparatorUtils.chainedComparator(coms));
+        }
+    }
+
+    @Override
+    protected List<SeasonDto> mapResultList(List<Season> resultList) {
+        return sm.mapSToSdtoList(resultList);
     }
 
 }
