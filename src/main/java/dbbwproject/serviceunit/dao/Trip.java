@@ -20,7 +20,7 @@ public class Trip {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(updatable = false, nullable = false)
     private Integer id;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "season_id", referencedColumnName = "id", nullable = false)
     private Season season;
     @OneToMany(mappedBy = "trip", fetch = FetchType.EAGER)

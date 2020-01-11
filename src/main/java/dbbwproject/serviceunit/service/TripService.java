@@ -6,6 +6,9 @@ import dbbwproject.serviceunit.dao.Season;
 import dbbwproject.serviceunit.dao.Trip;
 import dbbwproject.serviceunit.dbutil.DBUtil;
 import dbbwproject.serviceunit.dto.*;
+import dbbwproject.serviceunit.dto.datatable.DtReqDto;
+import dbbwproject.serviceunit.dto.datatable.DtResponse;
+import dbbwproject.serviceunit.filter.TripFilter;
 import dbbwproject.serviceunit.mapper.TripMapperImpl;
 import dbbwproject.serviceunit.repository.TripRepository;
 import io.micrometer.core.instrument.util.StringUtils;
@@ -13,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.EntityManagerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,12 +28,14 @@ public class TripService extends AbstractService {
     private final TripRepository tripRepository;
     private final TripMapperImpl tm;
     private final DBUtil dbUtil;
+    private final EntityManagerFactory emf;
 
     @Autowired
-    public TripService(TripRepository tripRepository, TripMapperImpl tm, DBUtil dbUtil) {
+    public TripService(TripRepository tripRepository, TripMapperImpl tm, DBUtil dbUtil, EntityManagerFactory emf) {
         this.tm = tm;
         this.dbUtil = dbUtil;
         this.tripRepository = tripRepository;
+        this.emf = emf;
     }
 
     public ResponseEntity<List<Integer>> getBookedSeatNumbersForTrip(String seasonCode, String tripCode) {
@@ -112,5 +118,10 @@ public class TripService extends AbstractService {
     public ResponseEntity<Boolean> isTripByCodeExist(String seasonCode, String tripCode) {
         Trip trip = dbUtil.getTrip(seasonCode, tripCode);
         return ResponseEntity.ok(trip != null);
+    }
+
+    public ResponseEntity<DtResponse<TripDto>> getAllSeasonsForDT(DtReqDto dtReqDTO) {
+        DtResponse<TripDto> filteredResult = new TripFilter(emf, tm).filter(dtReqDTO);
+        return ResponseEntity.ok(filteredResult);
     }
 }

@@ -3,17 +3,16 @@ package dbbwproject.serviceunit.filter;
 import dbbwproject.serviceunit.dao.Season;
 import dbbwproject.serviceunit.dto.datatable.*;
 import io.micrometer.core.instrument.util.StringUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
 
 import javax.persistence.EntityManagerFactory;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
+import java.util.*;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public abstract class AbstractFiler<T, X> {
@@ -25,6 +24,7 @@ public abstract class AbstractFiler<T, X> {
     private Long filterCount;
     List<T> resultList = new ArrayList<>();
     String totalQuery = "";
+    private DtReqDto reqObj;
 
     AbstractFiler(EntityManagerFactory entityManagerFactory) {
         if (entityManagerFactory.unwrap(SessionFactory.class) == null) {
@@ -35,10 +35,11 @@ public abstract class AbstractFiler<T, X> {
 
     public DtResponse<X> filter(DtReqDto request) {
         request.validate();
-        List<Column> colList = request.getColumns();
+        reqObj = request;
         List<Order> orderList = request.getOrder();
+        List<Column> colList = request.getColumns();
         int drawNo = request.getDraw();
-        populateParams(colList);
+        populateParams();
 
         List<QueryParam> seachableParamList = queryParams.stream().filter(QueryParam::isSearchable).collect(Collectors.toList());
         buildFilterQuery(seachableParamList);
@@ -117,11 +118,17 @@ public abstract class AbstractFiler<T, X> {
 
     protected abstract void buildFilterQuery(List<QueryParam> searchableParamList);
 
-    protected abstract void populateParams(List<Column> colList);
+    protected abstract void populateParams();
 
 
-    <U> void populateParam(QueryParam<U> q, List<Column> colList, Predicate<Column> filterPredicate, Function<String, U> dataFunction) {
-        Optional<Column> selectedCol = colList.stream().filter(filterPredicate).findFirst();
+    <U> void populateParam(QueryParam<U> q, Function<String, U> dataFunction) {
+        Objects.requireNonNull(reqObj);
+        if (CollectionUtils.isEmpty(reqObj.getColumns())) {
+            throw new IllegalStateException("Internal server error. reqObj column list is empty");
+        }
+        List<Column> colList = reqObj.getColumns();
+
+        Optional<Column> selectedCol = colList.stream().filter(c -> q.getCode().equals(c.getData())).findFirst();
         if (!selectedCol.isPresent()) {
             return;
         }
@@ -134,16 +141,16 @@ public abstract class AbstractFiler<T, X> {
         }
     }
 
-    void addCmpByOrder(List<Comparator<Season>> coms, Dir dir, Comparator<Season> comparing) {
-        switch (dir) {
-            case asc:
-                coms.add(comparing);
-                break;
-            case dsc:
-                coms.add(comparing.reversed());
-                break;
+    void createComparatorAndAdd(List<Comparator<T>> coms, String data, Dir dir, QueryParam param, Comparator<T> comparing) {
+        if (param.isOrderly() && param.getCode().equals(data)) {
+            switch (dir) {
+                case asc:
+                    coms.add(comparing);
+                    break;
+                case dsc:
+                    coms.add(comparing.reversed());
+                    break;
+            }
         }
     }
-
-
 }

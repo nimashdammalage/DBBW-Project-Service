@@ -3,6 +3,8 @@ package dbbwproject.serviceunit.controller;
 import dbbwproject.serviceunit.dto.DropDownDto;
 import dbbwproject.serviceunit.dto.TripDto;
 import dbbwproject.serviceunit.dto.TripStatus;
+import dbbwproject.serviceunit.dto.datatable.DtReqDto;
+import dbbwproject.serviceunit.dto.datatable.DtResponse;
 import dbbwproject.serviceunit.service.TripService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -43,6 +45,12 @@ public class TripController {
     @ApiOperation(value = "Retrieve a list of all trips belong to a season", response = ResponseEntity.class)
     public ResponseEntity<List<TripDto>> getAllTripsForSeason(@PathVariable String seasonCode, @RequestParam(name = "fIndex", required = false, defaultValue = "0") int fIndex, @RequestParam("size") int size) {
         return tripService.getAllTripsForSeason(seasonCode, fIndex, size);
+    }
+
+    @ApiOperation(value = "Retrieve a list of trips for data table", response = ResponseEntity.class)
+    @PostMapping("seasons/datatable")
+    public ResponseEntity<DtResponse<TripDto>> getAllSeasonsForDT(@RequestBody DtReqDto dtReqDTO) {
+        return tripService.getAllSeasonsForDT(dtReqDTO);
     }
 
     @GetMapping("{seasonCode}/trip-code")
