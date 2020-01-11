@@ -22,7 +22,7 @@ public class Booking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(updatable = false, nullable = false)
     private Integer id;
-    @OneToOne
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "reg_id", referencedColumnName = "id", nullable = false)
     private RegNumber registrationNumber;
     @Enumerated(EnumType.STRING)

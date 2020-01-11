@@ -43,7 +43,7 @@ public class SeasonService extends AbstractService {
 
     public ResponseEntity<List<SeasonDto>> getAllSeasonsUponLimit(int fIndex, int size) {
         List<Season> seasons = dbUtil.getSeasons(fIndex, size);
-        return new ResponseEntity<>(sm.mapSToSdtoList(seasons), HttpStatus.OK);
+        return ResponseEntity.ok(sm.mapSToSdtoList(seasons));
     }
 
     public ResponseEntity<List<DropDownDto>> getAllSeasonCodesDropDown() {

@@ -1,6 +1,8 @@
 package dbbwproject.serviceunit.controller;
 
 import dbbwproject.serviceunit.dto.*;
+import dbbwproject.serviceunit.dto.datatable.DtReqDto;
+import dbbwproject.serviceunit.dto.datatable.DtResponse;
 import dbbwproject.serviceunit.service.PencilBookingService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -29,7 +31,7 @@ public class PencilBookingController {
     @ApiOperation(value = "Retrieve a list of all pencil booking status", response = ResponseEntity.class)
     public ResponseEntity<List<DropDownDto>> getAllPencilBookingStatus() {
         List<DropDownDto> collect = Arrays.stream(PencilBookingStatus.values()).map(p -> new DropDownDto(p, p.toString())).collect(Collectors.toList());
-        return new ResponseEntity<>(collect, HttpStatus.OK);
+        return ResponseEntity.ok(collect);
     }
 
     @PostMapping("{seasonCode}/trips/{tripCode}/pencil-bookings")
@@ -54,6 +56,12 @@ public class PencilBookingController {
     @ApiOperation(value = "Retrieve a list of all pencil bookings belong to a trip", response = ResponseEntity.class)
     public ResponseEntity<List<PencilBookingDto>> getAllPencilBookingsForTrip(@PathVariable String seasonCode, @PathVariable String tripCode, @RequestParam(name = "fIndex", required = false, defaultValue = "0") int fIndex, @RequestParam("size") int size) {
         return pencilBookingService.getAllPencilBookingsForTrip(seasonCode, tripCode, fIndex, size);
+    }
+
+    @ApiOperation(value = "Retrieve a list of pencil bookings for data table", response = ResponseEntity.class)
+    @PostMapping("/trips/pencil-bookings/datatable")
+    public ResponseEntity<DtResponse<PencilBookingDto>> getAllPenBooksForDT(@RequestBody DtReqDto dtReqDTO) {
+        return pencilBookingService.getAllPenBooksForDT(dtReqDTO);
     }
 
     @GetMapping("{seasonCode}/trips/{tripCode}/pencil-booking-code")

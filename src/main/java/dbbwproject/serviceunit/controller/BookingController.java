@@ -1,6 +1,8 @@
 package dbbwproject.serviceunit.controller;
 
 import dbbwproject.serviceunit.dto.*;
+import dbbwproject.serviceunit.dto.datatable.DtReqDto;
+import dbbwproject.serviceunit.dto.datatable.DtResponse;
 import dbbwproject.serviceunit.service.BookingService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -31,14 +33,14 @@ public class BookingController {
     @GetMapping("trips/bookings/typeofservice")
     public ResponseEntity<List<DropDownDto>> getAllTypeOfServices() {
         List<DropDownDto> collect = Arrays.stream(TypeOfService.values()).map(t -> new DropDownDto(t, t.toString())).collect(Collectors.toList());
-        return new ResponseEntity<>(collect, HttpStatus.OK);
+        return ResponseEntity.ok(collect);
     }
 
     @ApiOperation(value = "Retrieve a list of TypeOfTravelDoc for drop down", response = ResponseEntity.class)
     @GetMapping("trips/bookings/typeoftraveldoc")
     public ResponseEntity<List<DropDownDto>> getAllTypeOfTravelDocs() {
         List<DropDownDto> collect = Arrays.stream(TypeOfTravelDoc.values()).map(t -> new DropDownDto(t, t.toString())).collect(Collectors.toList());
-        return new ResponseEntity<>(collect, HttpStatus.OK);
+        return ResponseEntity.ok(collect);
     }
 
     @PostMapping("{seasonCode}/trips/{tripCode}/bookings")
@@ -63,6 +65,12 @@ public class BookingController {
     @ApiOperation(value = "Retrieve a list of all pencil bookings belong to a trip", response = ResponseEntity.class)
     public ResponseEntity<List<BookingDto>> getAllBookingsForTrip(@PathVariable String seasonCode, @PathVariable String tripCode, @RequestParam(name = "fIndex", required = false, defaultValue = "0") int fIndex, @RequestParam("size") int size) {
         return bookingService.getAllBookingsForTrip(seasonCode, tripCode, fIndex, size);
+    }
+
+    @ApiOperation(value = "Retrieve a list of bookings for data table", response = ResponseEntity.class)
+    @PostMapping("/trips/bookings/datatable")
+    public ResponseEntity<DtResponse<BookingDto>> getAllPenBooksForDT(@RequestBody DtReqDto dtReqDTO) {
+        return bookingService.getAllBookingsForDT(dtReqDTO);
     }
 
     @PutMapping("{seasonCode}/trips/{tripCode}/bookings/{regNumber}")

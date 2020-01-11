@@ -120,7 +120,7 @@ public class TripService extends AbstractService {
         return ResponseEntity.ok(trip != null);
     }
 
-    public ResponseEntity<DtResponse<TripDto>> getAllSeasonsForDT(DtReqDto dtReqDTO) {
+    public ResponseEntity<DtResponse<TripDto>> getAllTripsForDT(DtReqDto dtReqDTO) {
         DtResponse<TripDto> filteredResult = new TripFilter(emf, tm).filter(dtReqDTO);
         return ResponseEntity.ok(filteredResult);
     }

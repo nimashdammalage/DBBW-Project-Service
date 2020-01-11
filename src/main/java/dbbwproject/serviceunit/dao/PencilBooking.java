@@ -21,7 +21,7 @@ public class PencilBooking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(updatable = false, nullable = false)
     private Integer id;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "trip_id", referencedColumnName = "id", nullable = false)
     private Trip trip;
     @OneToMany(mappedBy = "pencilBooking", fetch = FetchType.EAGER, cascade = CascadeType.ALL)

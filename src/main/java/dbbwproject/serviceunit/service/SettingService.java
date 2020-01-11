@@ -29,7 +29,7 @@ public class SettingService extends AbstractService {
 
     public ResponseEntity<SettingsDto> getSettings() {
         settingsDTO = populateSettingDTO();
-        return new ResponseEntity<>(settingsDTO, HttpStatus.OK);
+        return ResponseEntity.ok(settingsDTO);
     }
 
     private SettingsDto populateSettingDTO() {

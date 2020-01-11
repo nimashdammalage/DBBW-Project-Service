@@ -32,7 +32,7 @@ public class SeasonController {
     @GetMapping("seasons/season-status")
     public ResponseEntity<List<DropDownDto>> getAllSeasonStatus() {
         List<DropDownDto> collect = Arrays.stream(SeasonStatus.values()).map(s -> new DropDownDto(s, s.toString())).collect(Collectors.toList());
-        return new ResponseEntity<>(collect, HttpStatus.OK);
+        return ResponseEntity.ok(collect);
     }
 
     @ApiOperation(value = "Retrieve a list of all seasons", response = ResponseEntity.class)

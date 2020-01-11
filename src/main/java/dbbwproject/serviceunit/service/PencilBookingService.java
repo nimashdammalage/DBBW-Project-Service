@@ -6,6 +6,9 @@ import dbbwproject.serviceunit.dbutil.DBUtil;
 import dbbwproject.serviceunit.dto.DropDownDto;
 import dbbwproject.serviceunit.dto.PencilBookingDto;
 import dbbwproject.serviceunit.dto.TripStatus;
+import dbbwproject.serviceunit.dto.datatable.DtReqDto;
+import dbbwproject.serviceunit.dto.datatable.DtResponse;
+import dbbwproject.serviceunit.filter.PencilBookingFilter;
 import dbbwproject.serviceunit.mapper.DateMapper;
 import dbbwproject.serviceunit.mapper.PencilBookingMapperImpl;
 import dbbwproject.serviceunit.repository.PencilBookingRepository;
@@ -15,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResourceAccessException;
 
+import javax.persistence.EntityManagerFactory;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -26,19 +30,21 @@ public class PencilBookingService extends AbstractService {
     private final PencilBookingMapperImpl pm;
     private final DBUtil dbUtil;
     private final SettingService settingService;
+    private final EntityManagerFactory emf;
 
     @Autowired
-    public PencilBookingService(PencilBookingRepository pencilBookingRepository, PencilBookingMapperImpl pm, DBUtil dbUtil, SettingService settingService) {
+    public PencilBookingService(PencilBookingRepository pencilBookingRepository, PencilBookingMapperImpl pm, DBUtil dbUtil, SettingService settingService, EntityManagerFactory emf) {
         this.pencilBookingRepository = pencilBookingRepository;
         this.pm = pm;
         this.dbUtil = dbUtil;
         this.settingService = settingService;
+        this.emf = emf;
     }
 
     public ResponseEntity createNewPencilBooking(String seasonCode, String tripCode, PencilBookingDto resource) {
         valArg(!seasonCode.equals(resource.getSeasonCode()), String.format(MCons.seasonCodeUrlNotMatch, resource.getSeasonCode(), seasonCode));
         valArg(!tripCode.equals(resource.getTripCode()), String.format(MCons.tripCodeUrlNotMatch, resource.getTripCode(), tripCode));
-        PencilBooking pencilBooking = dbUtil.getPencilBooking(seasonCode,tripCode,resource.getPersonName());
+        PencilBooking pencilBooking = dbUtil.getPencilBooking(seasonCode, tripCode, resource.getPersonName());
         valArg(pencilBooking != null, String.format(MCons.penBkAlreadyExist, seasonCode, tripCode, resource.getPersonName()));
         Trip trip = dbUtil.getTrip(seasonCode, tripCode);
         valArg(trip == null, String.format(MCons.tripNotExist, tripCode, seasonCode));
@@ -154,5 +160,10 @@ public class PencilBookingService extends AbstractService {
             return ResponseEntity.ok(true);
         }
         return ResponseEntity.ok(false);
+    }
+
+    public ResponseEntity<DtResponse<PencilBookingDto>> getAllPenBooksForDT(DtReqDto dtReqDTO) {
+        DtResponse<PencilBookingDto> filteredResult = new PencilBookingFilter(emf, pm).filter(dtReqDTO);
+        return ResponseEntity.ok(filteredResult);
     }
 }

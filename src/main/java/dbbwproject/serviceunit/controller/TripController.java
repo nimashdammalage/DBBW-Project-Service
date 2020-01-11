@@ -32,7 +32,7 @@ public class TripController {
     @GetMapping("trips/trip-status")
     public ResponseEntity<List<DropDownDto>> getAllTripStatus() {
         List<DropDownDto> collect = Arrays.stream(TripStatus.values()).map(t -> new DropDownDto(t, t.toString())).collect(Collectors.toList());
-        return new ResponseEntity<>(collect, HttpStatus.OK);
+        return  ResponseEntity.ok(collect);
     }
 
     @GetMapping("{seasonCode}/trips/{tripCode}/booked-seat-numbers")
@@ -48,9 +48,9 @@ public class TripController {
     }
 
     @ApiOperation(value = "Retrieve a list of trips for data table", response = ResponseEntity.class)
-    @PostMapping("seasons/datatable")
-    public ResponseEntity<DtResponse<TripDto>> getAllSeasonsForDT(@RequestBody DtReqDto dtReqDTO) {
-        return tripService.getAllSeasonsForDT(dtReqDTO);
+    @PostMapping("trips/datatable")
+    public ResponseEntity<DtResponse<TripDto>> getAllTripsForDT(@RequestBody DtReqDto dtReqDTO) {
+        return tripService.getAllTripsForDT(dtReqDTO);
     }
 
     @GetMapping("{seasonCode}/trip-code")

@@ -7,7 +7,7 @@ import javax.persistence.*;
 @Entity
 @Getter
 @Setter
-@ToString(exclude = {"pencilBooking","trip"})
+@ToString(exclude = {"pencilBooking", "trip"})
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "reg_number")
@@ -24,11 +24,11 @@ public class RegNumber {
     @Column(updatable = false, nullable = false)
     private Integer id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "pb_id", referencedColumnName = "id", nullable = false)
     private PencilBooking pencilBooking;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "trip_id", referencedColumnName = "id", nullable = false)
     private Trip trip;
 

@@ -7,6 +7,9 @@ import dbbwproject.serviceunit.dao.Trip;
 import dbbwproject.serviceunit.dbutil.DBUtil;
 import dbbwproject.serviceunit.dto.BookingDto;
 import dbbwproject.serviceunit.dto.TripStatus;
+import dbbwproject.serviceunit.dto.datatable.DtReqDto;
+import dbbwproject.serviceunit.dto.datatable.DtResponse;
+import dbbwproject.serviceunit.filter.BookingFilter;
 import dbbwproject.serviceunit.mapper.BookingMapperImpl;
 import dbbwproject.serviceunit.pdfhandler.application.MdyApplication;
 import dbbwproject.serviceunit.pdfhandler.application.MdyApplicationHandler;
@@ -18,6 +21,7 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.EntityManagerFactory;
 import java.io.ByteArrayInputStream;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,12 +33,14 @@ public class BookingService extends AbstractService {
     private final BookingRepository bookingRepository;
     private final BookingMapperImpl bm;
     private final DBUtil dbUtil;
+    private final EntityManagerFactory emf;
 
     @Autowired
-    public BookingService(BookingRepository bookingRepository, BookingMapperImpl bm, DBUtil dbUtil) {
+    public BookingService(BookingRepository bookingRepository, BookingMapperImpl bm, DBUtil dbUtil, EntityManagerFactory emf) {
         this.bookingRepository = bookingRepository;
         this.bm = bm;
         this.dbUtil = dbUtil;
+        this.emf = emf;
     }
 
     public ResponseEntity createNewBooking(String seasonCode, String tripCode, BookingDto resource) {
@@ -63,7 +69,7 @@ public class BookingService extends AbstractService {
 
     public ResponseEntity<List<BookingDto>> getAllBookingsForTrip(String seasonCode, String tripCode, int fIndex, int size) {
         List<Booking> bks = dbUtil.getBookingsForTrip(seasonCode, tripCode, fIndex, size);
-        return new ResponseEntity<>(bm.mapBkToBkDtoList(bks), HttpStatus.OK);
+        return ResponseEntity.ok(bm.mapBkToBkDtoList(bks));
     }
 
     public ResponseEntity modifyBookingByRegNumber(String seasonCode, String tripCode, int regNumber, BookingDto resource) {
@@ -142,5 +148,10 @@ public class BookingService extends AbstractService {
     private void validateRegNumber(int registrationNumber, String pbPersonName, List<RegNumber> regNumList) {
         List<Integer> regNums = regNumList.stream().map(RegNumber::getRegNumber).collect(Collectors.toList());
         valArg(!regNums.contains(registrationNumber), String.format(MCons.invalidRegNum, Integer.toString(registrationNumber), pbPersonName));
+    }
+
+    public ResponseEntity<DtResponse<BookingDto>> getAllBookingsForDT(DtReqDto dtReqDTO) {
+        DtResponse<BookingDto> filteredResult = new BookingFilter(emf, bm).filter(dtReqDTO);
+        return ResponseEntity.ok(filteredResult);
     }
 }
